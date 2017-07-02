@@ -1,0 +1,24 @@
+# FILES
+*.VC.db
+*.VC.opendb
+*.sdf
+*.pdb
+*.dll
+*.exe
+*.ilk
+*.lib
+*.opensdf
+*.idb
+*.suo
+*.dylib
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+#Folders
+Debug/
+oldResources/
+Release/
+OpenGL test/Debug/
+OpenGL test/Release/
