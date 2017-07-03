@@ -28,6 +28,7 @@ static TCHAR szTitle[] = _T("123");
 HINSTANCE hInst;
 
 HWND main_hwnd;
+HDC g_hDC;
 
 #define WIN_W 1920
 #define WIN_H 1080
@@ -82,42 +83,74 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     else
     {
-        GLenum err = glGetError();
-
         RECT rc;
         GetClientRect(main_hwnd, &rc);
 
-        PIXELFORMATDESCRIPTOR pfd =
-        {
-            sizeof(PIXELFORMATDESCRIPTOR),
-            1,
-            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-            PFD_TYPE_RGBA,             //The kind of framebuffer. RGBA or palette.
-            32,                        //Colordepth of the framebuffer.
-            0, 0, 0, 0, 0, 0,
-            0,
-            0,
-            0,
-            0, 0, 0, 0,
-            24,                        //Number of bits for the depthbuffer
-            8,                         //Number of bits for the stencilbuffer
-            0,                         //Number of Aux buffers in the framebuffer.
-            PFD_MAIN_PLANE,
-            0,
-            0, 0, 0
-        };
-        err = glGetError();
+        //PIXELFORMATDESCRIPTOR pfd =
+        //{
+        //    sizeof(PIXELFORMATDESCRIPTOR),
+        //    1,
+        //    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+        //    PFD_TYPE_RGBA,             //The kind of framebuffer. RGBA or palette.
+        //    32,                        //Colordepth of the framebuffer.
+        //    0, 0, 0, 0, 0, 0,
+        //    0,
+        //    0,
+        //    0,
+        //    0, 0, 0, 0,
+        //    24,                        //Number of bits for the depthbuffer
+        //    8,                         //Number of bits for the stencilbuffer
+        //    0,                         //Number of Aux buffers in the framebuffer.
+        //    PFD_MAIN_PLANE,
+        //    0,
+        //    0, 0, 0
+        //};
 
-        HDC windowDC = GetDC(main_hwnd);
-        int closePixelFormat = ChoosePixelFormat(windowDC, &pfd);
-        SetPixelFormat(windowDC, closePixelFormat, &pfd);
+        //HDC windowDC = GetDC(main_hwnd);
+        //int closePixelFormat = ChoosePixelFormat(windowDC, &pfd);
+        //SetPixelFormat(windowDC, closePixelFormat, &pfd);
 
-        err = glGetError();
+        //HGLRC openGLContext = wglCreateContext(windowDC);
+        //bool result = wglMakeCurrent(windowDC, openGLContext);
 
-        HGLRC openGLContext = wglCreateContext(windowDC);
-        bool result = wglMakeCurrent(windowDC, openGLContext);
+		PIXELFORMATDESCRIPTOR pfd;
+		memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
-        err = glGetError();
+		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+		pfd.nVersion = 1;
+		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		pfd.iPixelType = PFD_TYPE_RGBA;
+		pfd.cColorBits = 24;
+		pfd.cDepthBits = 24;
+
+		g_hDC = GetDC(main_hwnd);
+		GLuint iPixelFormat = ChoosePixelFormat(g_hDC, &pfd);
+
+		if (iPixelFormat != 0)
+		{
+			PIXELFORMATDESCRIPTOR bestMatch_pfd;
+			DescribePixelFormat(g_hDC, iPixelFormat, sizeof(pfd), &bestMatch_pfd);
+
+			if (bestMatch_pfd.cDepthBits < pfd.cDepthBits)
+			{
+				return 0;
+			}
+
+			if (SetPixelFormat(g_hDC, iPixelFormat, &pfd) == FALSE)
+			{
+				DWORD dwErrorCode = GetLastError();
+				return 0;
+			}
+		}
+		else
+		{
+			DWORD dwErrorCode = GetLastError();
+			return 0;
+		}
+
+		HGLRC g_hRC = wglCreateContext(g_hDC);
+		wglMakeCurrent(g_hDC, g_hRC);
+
 
         //MessageBoxA(0, (char*)glGetString(GL_VERSION), "OPENGL VERSION", 0);
         
@@ -125,34 +158,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         //glewExperimental = GL_TRUE;
         glewInit();
 
-        GLuint framebuffer = 0;
-        err = glGetError();
-        glGenFramebuffers(1, &framebuffer);
-        err = glGetError();
-        glBindFramebuffer(GL_FRAMEBUFFER, 0/*framebuffer*/); // OpenGL framebuffer = 0 by default in OpenGL ES it is not 0
+  //      GLuint framebuffer;
+		//GL_ERROR(glGenFramebuffers(1, &framebuffer));
+		//GL_ERROR(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer));
+		////GL_ERROR(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
-        GLuint colorRenderbuffer;
-        glGenRenderbuffers(1, &colorRenderbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, WIN_W, WIN_H);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderbuffer);
+  //      GLuint colorRenderbuffer;
+		//GL_ERROR(glGenRenderbuffers(1, &colorRenderbuffer));
+		//GL_ERROR(glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer));
+		//GL_ERROR(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, WIN_W, WIN_H));
+		//GL_ERROR(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderbuffer));
 
-        GLuint depthRenderbuffer;
-        glGenRenderbuffers(1, &depthRenderbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, WIN_W, WIN_H);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
+  //      GLuint depthRenderbuffer;
+		//GL_ERROR(glGenRenderbuffers(1, &depthRenderbuffer));
+		//GL_ERROR(glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer));
+		//GL_ERROR(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, WIN_W, WIN_H));
+		//GL_ERROR(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer));
 
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) 
-		{
-            MessageBoxA(0, "failed to make complete framebuffer object", "OPENGL VERSION", 0);
-        }
-
-        err = glGetError();
-
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-        err = glGetError();
+  //      GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  //      if (status != GL_FRAMEBUFFER_COMPLETE) 
+		//{
+  //          MessageBoxA(0, "failed to make complete framebuffer object", "OPENGL VERSION", 0);
+  //      }
     }
 
     ShowWindow(main_hwnd, nCmdShow);
@@ -322,6 +349,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Light* light = new Light(glm::vec3(1000.0f, 200.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 	const int SIZE_OF_WORLD = 4;
+	const int HALF_SIZE_OF_WORLD = SIZE_OF_WORLD / 2;
 	std::vector<Terrain*> terrains;
 	terrains.reserve(SIZE_OF_WORLD * SIZE_OF_WORLD);
 
@@ -334,33 +362,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	TerrainTexture* blendMap = new TerrainTexture(loader->loadTexture(RES_FOLDER "blendMap.png"));
 	std::string heightmap = RES_FOLDER "heightmap.png";
  
-	for (int i = -SIZE_OF_WORLD / 2; i < SIZE_OF_WORLD / 2; i++) {
-		for (int j = -SIZE_OF_WORLD / 2; j < SIZE_OF_WORLD / 2; j++) {
+	for (int i = -HALF_SIZE_OF_WORLD; i < HALF_SIZE_OF_WORLD; i++) {
+		for (int j = -HALF_SIZE_OF_WORLD; j < HALF_SIZE_OF_WORLD; j++) {
 			terrains.push_back(new Terrain(i, j, *loader, *texturePack, *blendMap, heightmap));
 		}
 	}
 
-	RawModel* plane = loader->loadToVAO(std::string("plane"));
+	/*RawModel* plane = loader->loadToVAO(std::string("plane"));
 	ModelTexture* texture1 = new ModelTexture(loader->loadTexture("C:/Users/Кондрат/Downloads/OpenGL test/OpenGL test/dragon.png"));
 	TexturedModel* texturedPlane = new TexturedModel(plane, texture1);
-	Entity* planeEntity = new Entity(texturedPlane, glm::vec3(0.0f, -11.5f, 0.0f), glm::vec3(0.0f, 90.0f, 0.0f), 10.0f);
+	Entity* planeEntity = new Entity(texturedPlane, glm::vec3(0.0f, -11.5f, 0.0f), glm::vec3(0.0f, 90.0f, 0.0f), 10.0f);*/
 
-	MasterRenderer* renderer = new MasterRenderer();
+	MasterRenderer* renderer = new MasterRenderer(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f));
 
 	// ************************ PLAYER ************************
 	RawModel* playerModel = loader->loadFromOBJ(RES_FOLDER "person.obj");
 	ModelTexture* playerTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "playerTexture.png"));
-	flowerTexture->setShineDamper(10);
-	flowerTexture->setReflectivity(0);
+	playerTexture->setShineDamper(10);
+	playerTexture->setReflectivity(0);
 
 	TexturedModel* playerTexturedModel = new TexturedModel(playerModel, playerTexture);
 
-	player = new Player(playerTexturedModel, glm::vec3(0.0f, 0.0f, -100.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	player = new Player(playerTexturedModel, glm::vec3(3000.0f, 0.0f, 3000.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
 	camera = new ModelViewCamera(*player);
 
 	// ************************ PLAYER ************************
 
-	bool inc = false;
+	bool inc = true;
+	GLenum error;
+	float RED = 1.0;
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
@@ -373,18 +403,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Sleep(10);
 
 			if (inc) {
-				light->setPosition(glm::vec3(light->getPosition().x + 2, light->getPosition().y, light->getPosition().z));
-				if (light->getPosition().x > 3200) inc = false;
+				light->setPosition(glm::vec3(light->getPosition().x + 3, light->getPosition().y, light->getPosition().z));
+				if (light->getPosition().x > 1100) inc = false;
 			}
 
 			if (!inc) {
-				light->setPosition(glm::vec3(light->getPosition().x - 2, light->getPosition().y, light->getPosition().z));
-				if (light->getPosition().x < 200) inc = true;
+				light->setPosition(glm::vec3(light->getPosition().x - 3, light->getPosition().y, light->getPosition().z));
+				if (light->getPosition().x < -1100) inc = true;
 			}
 
-				 
-			//camera->setYaw(camera->getYaw() + 1);
-			
 			Time time = Time::getInstance();
 			float delta = time.getTimePassedFromLastCallMS();
 
@@ -408,19 +435,50 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				renderer->processEntity(*flower);
 			}
 
-			renderer->processEntity(*planeEntity);
+			//renderer->processEntity(*planeEntity);
 
-			player->move(delta / 1000.0f);
+			// TO DO
+			float terX = player->getPosition().x / terrains[0]->getSizeOfSide();
+			float terZ = player->getPosition().z / terrains[0]->getSizeOfSide();
+
+			float fracX = terX - (int)terX;
+			float fracZ = terZ - (int)terZ;
+
+			if (fracX != 0) {
+				if (terX > 0) {
+					terX = terX - fracX;
+				}
+				else {
+					terX = terX - (1 + fracX);
+				}
+			}
+
+			if (fracZ != 0) {
+				if (terZ > 0) {
+					terZ = terZ - fracZ;
+				}
+				else {
+					terZ = terZ - (1 + fracZ);
+				}
+			}
+
+			int index = (HALF_SIZE_OF_WORLD + terX) * 4 + (HALF_SIZE_OF_WORLD + terZ);
+
+			player->move(delta / 1000.0f, *terrains[index]);
 			renderer->processEntity(*player);
 
-			renderer->render(light, camera);
-            SwapBuffers(GetDC(main_hwnd));
+
+			renderer->render(light, camera, glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f));
+
+			//glClearColor(RED, 150.0f / 255.0f, 0.0f, 1.0f);
+			//glClear(GL_COLOR_BUFFER_BIT/* | GL_DEPTH_BUFFER_BIT*/);
+
+            SwapBuffers(g_hDC);
         }
     }
 
 	delete renderer;
 
-    GLenum err = glGetError();
     return (int)msg.wParam;
 }
 
@@ -432,11 +490,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 // WM_DESTROY - post a quit message and return
 //
 //
-//int last_mouse_x = 0;
-//int last_mouse_y = 0;
-//
-//float current_mouse_x_angle = 0;
-//float current_mouse_y_angle = 0;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {

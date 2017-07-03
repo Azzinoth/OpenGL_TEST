@@ -10,6 +10,8 @@
 #include <string.h>
 #include "PNGTextureLoader.h"
 
+#include "Checker.h"
+
 #include "thirdparty/lodepng.h"
 
 GLuint png_texture_load(const char* file_name, int* width, int* height)
@@ -27,11 +29,11 @@ GLuint png_texture_load(const char* file_name, int* width, int* height)
 
 	// Generate the OpenGL texture object
 	GLuint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	GL_ERROR(glGenTextures(1, &texture));
+	GL_ERROR(glBindTexture(GL_TEXTURE_2D, texture));
+	GL_ERROR(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data()));
+	GL_ERROR(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+	GL_ERROR(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
 	return texture;
 }

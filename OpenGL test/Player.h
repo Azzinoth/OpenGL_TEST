@@ -3,16 +3,15 @@
 #include "Entity.h"
 #include "Time.h"
 #include "Maths.h"
+#include "Terrain.h"
 
 class Player : public Entity {
 
 	int currentKey = 0;
-	const float RUN_SPEED = 20;
+	const float RUN_SPEED = 40;
 	const float TURN_SPEED = 160;
 	const float GRAVITY = -50;
 	const float JUMP_POWER = 30;
-
-	const float TERRAIN_HEIGHT = 0;
 
 	float currentSpeed = 0;
 	float currentTurnSpeed = 0;
@@ -48,7 +47,7 @@ public:
 		}
 	}
 
-	void move(float deltaTime) {
+	void move(float deltaTime, Terrain& terrain) {
 		float angle = currentTurnSpeed * deltaTime;
 		this->increaseRotation(glm::vec3(0.0f, angle, 0.0f));
 		float distance = currentSpeed * deltaTime;
@@ -58,11 +57,13 @@ public:
 
 		this->increasePosition(glm::vec3(deltaX, 0.0f, deltaZ));
 
-		if (this->getPosition().y != TERRAIN_HEIGHT) upwardSpeed += GRAVITY * deltaTime;
+		float terrainH = terrain.getHeightOfTerrain(this->getPosition().x, this->getPosition().z);
+
+		if (this->getPosition().y != terrainH) upwardSpeed += GRAVITY * deltaTime;
 		this->increasePosition(glm::vec3(0.0f, upwardSpeed * deltaTime, 0.0f));
-		if (this->getPosition().y < TERRAIN_HEIGHT) {
+		if (this->getPosition().y < terrainH) {
 			upwardSpeed = 0;
-			this->getPosition() = glm::vec3(this->getPosition().x, TERRAIN_HEIGHT, this->getPosition().z);
+			this->getPosition() = glm::vec3(this->getPosition().x, terrainH, this->getPosition().z);
 			this->updateTransformationMatrix();
 			isInAir = false;
 		}

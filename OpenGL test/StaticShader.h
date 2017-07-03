@@ -164,5 +164,5 @@ public:
 
 	~StaticShader() {
 		cleanUp();
-	};
+	}
 };

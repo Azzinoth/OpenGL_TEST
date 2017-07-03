@@ -2,6 +2,7 @@
 
 #include "Entity.h"
 #include "StaticShader.h"
+#include "Checker.h"
 #include <map>
 
 class EntityRenderer {
@@ -11,32 +12,32 @@ class EntityRenderer {
 	void prepareTexturedModel(TexturedModel& model) {
 		RawModel* rawmodel = model.getRawModel();
 
-		glBindVertexArray(rawmodel->getVaoID());
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
+		GL_ERROR(glBindVertexArray(rawmodel->getVaoID()));
+		GL_ERROR(glEnableVertexAttribArray(0));
+		GL_ERROR(glEnableVertexAttribArray(1));
+		GL_ERROR(glEnableVertexAttribArray(2));
 
 		ModelTexture* texture = model.getTexture();
 		if (texture->getHasTransparency()) {
-			glDisable(GL_CULL_FACE);
+			GL_ERROR(glDisable(GL_CULL_FACE));
 		}
 		else {
-			glEnable(GL_CULL_FACE);
-			glCullFace(GL_BACK);
+			GL_ERROR(glEnable(GL_CULL_FACE));
+			GL_ERROR(glCullFace(GL_BACK));
 		}
 
 		shader->loadFakeLightingVariable(texture->getUseFakeLighting());
 		shader->loadShineVariables(texture->getShineDamper(), texture->getReflectivity());
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, model.getTexture()->getID());
+		GL_ERROR(glActiveTexture(GL_TEXTURE0));
+		GL_ERROR(glBindTexture(GL_TEXTURE_2D, model.getTexture()->getID()));
 	}
 
 	void unbindTexturedModel() {
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
-		glBindVertexArray(0);
+		GL_ERROR(glDisableVertexAttribArray(0));
+		GL_ERROR(glDisableVertexAttribArray(1));
+		GL_ERROR(glDisableVertexAttribArray(2));
+		GL_ERROR(glBindVertexArray(0));
 	}
 
 	void prepareInstance(Entity& entity) {
@@ -74,7 +75,7 @@ public:
 			prepareTexturedModel(*key);
 			for (auto batch : entities[key]) {
 				prepareInstance(*batch);
-				glDrawElements(GL_TRIANGLES, key->getRawModel()->getVertexCount(), GL_UNSIGNED_INT, 0);
+				GL_ERROR(glDrawElements(GL_TRIANGLES, key->getRawModel()->getVertexCount(), GL_UNSIGNED_INT, 0));
 			}
 			unbindTexturedModel();
 		}

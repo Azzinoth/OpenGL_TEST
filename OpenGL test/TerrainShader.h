@@ -178,5 +178,5 @@ public:
 
 	~TerrainShader() {
 		cleanUp();
-	};
+	}
 };

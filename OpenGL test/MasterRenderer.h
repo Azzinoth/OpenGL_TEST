@@ -24,6 +24,7 @@ class MasterRenderer {
 	const float NEAR_PLANE = 0.1f;
 	const float FAR_PLANE = 5000.0f;
 
+	glm::vec3 skyColour;
 	glm::mat4 projectionMatrix;
 
 	void createProjectionMatrix() {
@@ -42,8 +43,9 @@ class MasterRenderer {
 	}
 
 public:
-	MasterRenderer() {
+	MasterRenderer(glm::vec3 skyColour) {
 		time = new Time();
+		this->skyColour = skyColour;
 
 		enableCulling();
 
@@ -56,18 +58,19 @@ public:
 	}
 
 	void enableCulling() {
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
+		GL_ERROR(glEnable(GL_CULL_FACE));
+		GL_ERROR(glCullFace(GL_BACK));
 	}
 
 	void disableCulling() {
-		glDisable(GL_CULL_FACE);
+		GL_ERROR(glDisable(GL_CULL_FACE));
 	}
 
-	void render(Light* sun, Camera* camera) {
+	void render(Light* sun, Camera* camera, glm::vec3 skyColour) {
+		this->skyColour = skyColour;
 		prepare();
 		shader->start();
-		shader->loadSkyColour(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f));
+		shader->loadSkyColour(skyColour);
 		shader->loadLight(*sun);
 
 		camera->move(Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f);
@@ -78,7 +81,7 @@ public:
 		shader->stop();
 
 		terrainShader->start();
-		terrainShader->loadSkyColour(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f));
+		terrainShader->loadSkyColour(skyColour);
 		terrainShader->loadLight(*sun);
 		terrainShader->loadViewMatrix(*camera);
 
@@ -115,9 +118,12 @@ public:
 	}
 
 	void prepare() {
-		glEnable(GL_DEPTH_TEST);
-		glClearColor(101.0f/255.0f, 150.0f / 255.0f, 206.0f / 255.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		GL_ERROR(glEnable(GL_DEPTH_TEST));
+		
+		GL_ERROR(glClearColor(skyColour.x, skyColour.y, skyColour.z, 1.0f));
+		GLenum error_ = glGetError();
+		error_;
+		GL_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
 
 	~MasterRenderer() {

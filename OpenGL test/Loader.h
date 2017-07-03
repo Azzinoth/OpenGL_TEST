@@ -20,32 +20,32 @@ class Loader {
 
 	GLuint createVAO() {
 		GLuint vaoID;
-		glGenVertexArrays(1, &vaoID);
+		GL_ERROR(glGenVertexArrays(1, &vaoID));
 		vaos.push_back(vaoID);
-		glBindVertexArray(vaoID);
+		GL_ERROR(glBindVertexArray(vaoID));
 		return vaoID;
 	}
 
 	void storeDataInAttributeList(int attributeNumber, int coordinbateSize, std::vector<float> data) {
 		GLuint vboID;
-	    glGenBuffers(1, &vboID);
+		GL_ERROR(glGenBuffers(1, &vboID));
 		vbos.push_back(vboID);
-		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * data.size(), data.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(attributeNumber, coordinbateSize, GL_FLOAT, false, 0, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, vboID));
+		GL_ERROR(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * data.size(), data.data(), GL_STATIC_DRAW));
+		GL_ERROR(glVertexAttribPointer(attributeNumber, coordinbateSize, GL_FLOAT, false, 0, 0));
+		GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	}
 
 	void unbindVAO() {
-		glBindVertexArray(0);
+		GL_ERROR(glBindVertexArray(0));
 	}
 
 	void bindIndicesBuffer(std::vector<int> indices) {
 		GLuint vboID;
-		glGenBuffers(1, &vboID);
+		GL_ERROR(glGenBuffers(1, &vboID));
 		vbos.push_back(vboID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), indices.data(), GL_STATIC_DRAW);
+		GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboID));
+		GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), indices.data(), GL_STATIC_DRAW));
 
 	}
 
@@ -97,9 +97,9 @@ public:
 	GLuint loadTexture(std::string fileName) {
 		int w,h;
 		GLuint texture = png_texture_load(fileName.c_str(), &w, &h);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.8f);
+		GL_ERROR(glGenerateMipmap(GL_TEXTURE_2D));
+		GL_ERROR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+		GL_ERROR(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.8f));
 
 		textures.push_back(texture);
 		return texture;
@@ -255,9 +255,9 @@ public:
 	}
 
 	void cleanUp() {
-		glDeleteVertexArrays(vaos.size(), vaos.data());
-		glDeleteBuffers(vbos.size(), vbos.data());
-		glDeleteTextures(textures.size(), textures.data());
+		GL_ERROR(glDeleteVertexArrays(vaos.size(), vaos.data()));
+		GL_ERROR(glDeleteBuffers(vbos.size(), vbos.data()));
+		GL_ERROR(glDeleteTextures(textures.size(), textures.data()));
 	}
 
 	~Loader() {

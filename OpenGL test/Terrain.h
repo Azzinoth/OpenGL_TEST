@@ -12,12 +12,13 @@ class Terrain {
 	const float MAX_HEIGHT = 80;
 	const float MAX_PIXEL_COLOUR = 256 /** 256 * 256*/;
 	
-
 	float x, z;
 
 	RawModel* model;
 	TerrainTexturePack* TexturePack;
 	TerrainTexture* blendMap;
+
+	std::vector<std::vector<float>> heights;
 
 	float getHeight(int x, int z, int w, int h, std::vector<unsigned char>& image) {
 		if (x < 0 || x >= w || z < 0 || z >= h) {
@@ -66,6 +67,10 @@ public:
 		return z;
 	}
 
+	float getSizeOfSide() {
+		return SIZE * SCALE;
+	}
+
 	RawModel* getModel() {
 		return model;
 	}
@@ -85,6 +90,10 @@ public:
 		lodepng::decode(image, width, height, heightMap);
 
 		int VERTEX_COUNT = width;
+		heights.resize(VERTEX_COUNT);
+		for (int i = 0; i < heights.size(); i++) {
+			heights[i].resize(VERTEX_COUNT);
+		}
 
 		int count = VERTEX_COUNT * VERTEX_COUNT;
 		std::vector<float> vertices;
@@ -103,8 +112,12 @@ public:
 		
 		for (int i = 0; i < VERTEX_COUNT; i++) {
 			for (int j = 0; j < VERTEX_COUNT; j++) {
+
+				float terrainHeight = getHeight(j, i, width, height, image);
+				heights[j][i] = terrainHeight;
+
 				vertices[vertexPointer * 3] = (float)j / ((float)VERTEX_COUNT - 1) * SIZE;
-				vertices[vertexPointer * 3 + 1] = getHeight(j, i, width, height, image);
+				vertices[vertexPointer * 3 + 1] = terrainHeight;
 				vertices[vertexPointer * 3 + 2] = (float)i / ((float)VERTEX_COUNT - 1) * SIZE;
 
 				/*normals[vertexPointer * 3] = 0.0f;
@@ -173,6 +186,38 @@ public:
 		}
 
 		return loader.loadToVAO(vertices, textureCoords, normals, indices);
+	}
+
+	float getHeightOfTerrain(float worldX, float worldZ) {
+		float terrainX = worldX - this->x;
+		float terrainZ = worldZ - this->z;
+
+		float gridSquareSize = SIZE * SCALE / ((float)(heights.size() - 1));
+
+		int gridX = terrainX / gridSquareSize;
+		int gridZ = terrainZ / gridSquareSize;
+
+		if (gridX >= heights.size() - 1 || gridX < 0 || gridZ >= heights.size() - 1 || gridZ < 0) {
+			return 0;
+		}
+
+		float xCoord = (terrainX - gridSquareSize * gridX) / gridSquareSize;
+		float zCoord = (terrainZ - gridSquareSize * gridZ) / gridSquareSize;
+
+		float answer;
+		if (xCoord <= (1 - zCoord)) {
+			answer = barryCentric(glm::vec3(0, heights[gridX][gridZ], 0), glm::vec3(1,
+				                  heights[gridX + 1][gridZ], 0), glm::vec3(0,
+					              heights[gridX][gridZ + 1], 1), glm::vec2(xCoord, zCoord));
+			//answer = (heights[gridX + 1][gridZ] + heights[gridX][gridZ - 1] + heights[gridX][gridZ + 1]) / 3;
+		} else {
+			answer = barryCentric(glm::vec3(1, heights[gridX + 1][gridZ], 0), glm::vec3(1,
+				                  heights[gridX + 1][gridZ + 1], 1), glm::vec3(0,
+					              heights[gridX][gridZ + 1], 1), glm::vec2(xCoord, zCoord));
+			//answer = (heights[gridX + 1][gridZ] + heights[gridX][gridZ + 1] + heights[gridX + 1][gridZ]) / 3;
+		}
+
+		return answer * SCALE;
 	}
 
 	~Terrain() {
