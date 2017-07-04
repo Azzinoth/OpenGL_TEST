@@ -49,7 +49,7 @@ class Loader {
 
 	}
 
-	void mySplit(char* text, const char* delimiters, std::vector<std::string>& dest) {
+	inline void mySplit(char* text, const char* delimiters, std::vector<std::string>& dest) {
 		dest.reserve(4);
 
 		char* pch;
@@ -130,6 +130,8 @@ public:
 		int normalDisplacementCounter = 0;
 		int vertexDisplacementCounter = 0;
 
+		std::vector<std::string> data;
+
 		while (!feof(myFile)) {
 			char buff[100];
 			fgets(buff, 100, myFile);
@@ -151,7 +153,8 @@ public:
 				char* line = new char[100];
 				strcpy(line, buff);
 
-				std::vector<std::string> data;
+				//std::vector<std::string> data;
+				data.clear();
 				mySplit(line, " ",data);
 
 				vertices.push_back(glm::vec3(std::stof(data[1]), std::stof(data[2]), std::stof(data[3])));
@@ -162,7 +165,8 @@ public:
 				char* line = new char[100];
 				strcpy(line, buff);
 
-				std::vector<std::string> data;
+				//std::vector<std::string> data;
+				data.clear();
 				mySplit(line, " ", data);
 
 				textures.push_back(glm::vec2(std::stof(data[1]), std::stof(data[2])));
@@ -173,7 +177,8 @@ public:
 				char* line = new char[100];
 				strcpy(line, buff);
 
-				std::vector<std::string> data;
+				//std::vector<std::string> data;
+				data.clear();
 				mySplit(line, " ", data);
 
 				normals.push_back(glm::vec3(std::stof(data[1]), std::stof(data[2]), std::stof(data[3])));

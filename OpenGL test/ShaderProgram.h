@@ -78,6 +78,10 @@ public:
 		GL_ERROR(glUniform3f(location, vector.x, vector.y, vector.z));
 	}
 
+	void load2DVector(GLuint& location, glm::vec2& vector) {
+		GL_ERROR(glUniform2f(location, vector.x, vector.y));
+	}
+
 	void loadBool(GLuint& location, bool& value) {
 		GLfloat fValue = 0.0f;
 		if (value) fValue = 1.0f;

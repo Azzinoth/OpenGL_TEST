@@ -10,6 +10,8 @@ class Entity {
 	float scale;
 
 	glm::mat4 transformationMatrix;
+
+	int textureIndex = 0;
 public:
 
 	Entity(TexturedModel* model, glm::vec3 position, glm::vec3 rotation, float scale) {
@@ -17,6 +19,16 @@ public:
 		this->position = position;
 		this->rotation = rotation;
 		this->scale = scale;
+
+		updateTransformationMatrix();
+	}
+
+	Entity(TexturedModel* model, int textureIndex, glm::vec3 position, glm::vec3 rotation, float scale) {
+		this->model = model;
+		this->position = position;
+		this->rotation = rotation;
+		this->scale = scale;
+		this->textureIndex = textureIndex;
 
 		updateTransformationMatrix();
 	}
@@ -76,5 +88,17 @@ public:
 
 	void updateTransformationMatrix() {
 		transformationMatrix = createTransformationMatrix(position, rotation, scale);
+	}
+
+	float getTextureXOffset() {
+		int column = textureIndex % model->getTexture()->getNumberOfRows();
+		float returnValue = (float)column / (float)model->getTexture()->getNumberOfRows();
+		return returnValue;
+	}
+
+	float getTextureYOffset() {
+		int row = textureIndex / model->getTexture()->getNumberOfRows();
+		float returnValue = (float)row / (float)model->getTexture()->getNumberOfRows();
+		return returnValue;
 	}
 };

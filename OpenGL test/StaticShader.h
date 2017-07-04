@@ -23,6 +23,9 @@ uniform vec3 lightPosition;
 
 uniform float useFakeLighting;
 
+uniform float numberOfRows;
+uniform vec2 offset;
+
 const float density = 0.007;
 const float gradient = 1.5;
 
@@ -31,7 +34,7 @@ void main(void) {
 
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projectionMatrix * positionRelativeToCam;
-	pass_texturecoords = textureCoords;
+	pass_texturecoords = (textureCoords / numberOfRows) + offset; // offset
 
 	vec3 actualNormal = normal;
 	if (useFakeLighting > 0.5) {
@@ -107,6 +110,8 @@ class StaticShader : public ShaderProgram {
 	GLuint location_reflectivity;
 	GLuint location_useFakeLighting;
 	GLuint location_skyColour;
+	GLuint location_numberOfRows;
+	GLuint location_offset;
 	
 public:
 
@@ -130,6 +135,8 @@ public:
 		location_reflectivity = getUniformLocation("reflectivity");
 		location_useFakeLighting = getUniformLocation("useFakeLighting");
 		location_skyColour = getUniformLocation("skyColour");
+		location_numberOfRows = getUniformLocation("numberOfRows");
+		location_offset = getUniformLocation("offset");
 	}
 
 	void loadTransformationMatrix(glm::mat4& matrix) {
@@ -160,6 +167,15 @@ public:
 
 	void loadSkyColour(glm::vec3 skyColour) {
 		loadVector(location_skyColour, skyColour);
+	}
+
+	void loadNumberOfRows(int numberOfRows) {
+		float temp = numberOfRows;
+		loadFloat(location_numberOfRows, temp);
+	}
+
+	void loadOffset(float x, float y) {
+		load2DVector(location_offset, glm::vec2(x, y));
 	}
 
 	~StaticShader() {

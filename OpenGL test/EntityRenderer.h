@@ -18,6 +18,8 @@ class EntityRenderer {
 		GL_ERROR(glEnableVertexAttribArray(2));
 
 		ModelTexture* texture = model.getTexture();
+		int x = texture->getNumberOfRows();
+		shader->loadNumberOfRows(x);
 		if (texture->getHasTransparency()) {
 			GL_ERROR(glDisable(GL_CULL_FACE));
 		}
@@ -42,7 +44,7 @@ class EntityRenderer {
 
 	void prepareInstance(Entity& entity) {
 		shader->loadTransformationMatrix(entity.getTransformationMatrix());
-			//createTransformationMatrix(entity.getPosition(), entity.getRotation(), entity.getScale())); // it was a stupid code :)
+		shader->loadOffset(entity.getTextureXOffset(), entity.getTextureYOffset());
 	}
 
 public:

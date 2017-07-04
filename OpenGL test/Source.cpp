@@ -35,6 +35,34 @@ HDC g_hDC;
 
 #define RES_FOLDER "C:/Users/Кондрат/Downloads/OpenGL test/OpenGL test/resources/"
 
+int getTerrainIndexOutOfWorldXZ(int worldX, int WorldZ, std::vector<Terrain*>& terrains, int halfSizeOfWorld) {
+	float terX = worldX / terrains[0]->getSizeOfSide();
+	float terZ = WorldZ / terrains[0]->getSizeOfSide();
+
+	float fracX = terX - (int)terX;
+	float fracZ = terZ - (int)terZ;
+
+	if (fracX != 0) {
+		if (terX > 0) {
+			terX = terX - fracX;
+		}
+		else {
+			terX = terX - (1 + fracX);
+		}
+	}
+
+	if (fracZ != 0) {
+		if (terZ > 0) {
+			terZ = terZ - fracZ;
+		}
+		else {
+			terZ = terZ - (1 + fracZ);
+		}
+	}
+
+	return (halfSizeOfWorld + terX) * (halfSizeOfWorld * 2) + (halfSizeOfWorld + terZ);
+}
+
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -235,7 +263,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//DWORD CurrentTickCount = GetTickCount();
 	//volatile int time = CurrentTickCount - LastTickCount;
 
+	glm::vec3 entityPosition;
+
+	// ************************ TERRAINS ************************
+	const int SIZE_OF_WORLD = 4;
+	const int HALF_SIZE_OF_WORLD = SIZE_OF_WORLD / 2;
+	std::vector<Terrain*> terrains;
+	terrains.reserve(SIZE_OF_WORLD * SIZE_OF_WORLD);
+
+	TerrainTexture* backgroundTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "grassy.png"));
+	TerrainTexture* rTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "mud.png"));
+	TerrainTexture* gTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "grassFlowers.png"));
+	TerrainTexture* bTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "path.png"));
+
+	TerrainTexturePack* texturePack = new TerrainTexturePack(*backgroundTexture, *rTexture, *gTexture, *bTexture);
+	TerrainTexture* blendMap = new TerrainTexture(loader->loadTexture(RES_FOLDER "blendMap.png"));
+	std::string heightmap = RES_FOLDER "heightmap.png";
+
+	for (int i = -HALF_SIZE_OF_WORLD; i < HALF_SIZE_OF_WORLD; i++) {
+		for (int j = -HALF_SIZE_OF_WORLD; j < HALF_SIZE_OF_WORLD; j++) {
+			terrains.push_back(new Terrain(i, j, *loader, *texturePack, *blendMap, heightmap));
+		}
+	}
+	// ************************ TERRAINS ************************
+
 	// ************************ TREES ************************
+
 	RawModel* treeModel = loader->loadFromOBJ(RES_FOLDER "lowPolyTree.obj");
 	ModelTexture* treeTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "lowPolyTree.png"));
 	treeTexture->setShineDamper(10);
@@ -260,23 +313,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelX += noizeX;
 		modelZ += noizeZ;
 
-		trees.push_back(new Entity(treeTexturedModel, glm::vec3(modelX, -5.0f, modelZ), glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		entityPosition = { modelX, terrains[getTerrainIndexOutOfWorldXZ(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD)]->getHeightOfTerrain(modelX, modelZ) - 4.0f, modelZ };
+		trees.push_back(new Entity(treeTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ TREES ************************
 
 	// ************************ FERNS ************************
 	RawModel* fernModel = loader->loadFromOBJ(RES_FOLDER "fern.obj");
-	ModelTexture* fernTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "fern.png"));
+	ModelTexture* fernTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "fernAtlas.png"));
 	fernTexture->setShineDamper(10);
 	fernTexture->setReflectivity(0);
 	fernTexture->setHasTransparency(true);
+	fernTexture->setNumberOfRows(2);
 
 	TexturedModel* fernTexturedModel = new TexturedModel(fernModel, fernTexture);
 
 	srand(GetTickCount() + 10000);
 
 	std::vector<Entity*> ferns;
-	for (int i = 0; i < NUMBER_OF_EACH_ENTITY; i++)
+	for (int i = 0; i < NUMBER_OF_EACH_ENTITY + 1000; i++)
 	{
 		float modelX = rand() % MAX_RANDOM - MAX_RANDOM / 2.0;
 		float modelZ = rand() % MAX_RANDOM - MAX_RANDOM / 2.0;
@@ -287,7 +342,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelX += noizeX;
 		modelZ += noizeZ;
 
-		ferns.push_back(new Entity(fernTexturedModel, glm::vec3(modelX, -3.0f, modelZ), glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		entityPosition = { modelX, terrains[getTerrainIndexOutOfWorldXZ(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD)]->getHeightOfTerrain(modelX, modelZ) - 2.0f, modelZ };
+		ferns.push_back(new Entity(fernTexturedModel, rand() % 4 , entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ FERNS ************************
 
@@ -315,7 +371,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelX += noizeX;
 		modelZ += noizeZ;
 
-		grasses.push_back(new Entity(grassTexturedModel, glm::vec3(modelX, 0.0f, modelZ), glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		entityPosition = { modelX, terrains[getTerrainIndexOutOfWorldXZ(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD)]->getHeightOfTerrain(modelX, modelZ) - 2.0f, modelZ };
+		grasses.push_back(new Entity(grassTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ GRASSES ************************
 
@@ -342,31 +399,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelX += noizeX;
 		modelZ += noizeZ;
 
-		flowers.push_back(new Entity(flowerTexturedModel, glm::vec3(modelX, 0.0f, modelZ), glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		entityPosition = { modelX, terrains[getTerrainIndexOutOfWorldXZ(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD)]->getHeightOfTerrain(modelX, modelZ) - 0.0f, modelZ };
+		flowers.push_back(new Entity(flowerTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ FLOWERS ************************
 
 	Light* light = new Light(glm::vec3(1000.0f, 200.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-
-	const int SIZE_OF_WORLD = 4;
-	const int HALF_SIZE_OF_WORLD = SIZE_OF_WORLD / 2;
-	std::vector<Terrain*> terrains;
-	terrains.reserve(SIZE_OF_WORLD * SIZE_OF_WORLD);
-
-	TerrainTexture* backgroundTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "grassy.png"));
-	TerrainTexture* rTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "mud.png"));
-	TerrainTexture* gTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "grassFlowers.png"));
-	TerrainTexture* bTexture = new TerrainTexture(loader->loadTexture(RES_FOLDER "path.png"));
-
-	TerrainTexturePack* texturePack = new TerrainTexturePack(*backgroundTexture, *rTexture, *gTexture, *bTexture);
-	TerrainTexture* blendMap = new TerrainTexture(loader->loadTexture(RES_FOLDER "blendMap.png"));
-	std::string heightmap = RES_FOLDER "heightmap.png";
- 
-	for (int i = -HALF_SIZE_OF_WORLD; i < HALF_SIZE_OF_WORLD; i++) {
-		for (int j = -HALF_SIZE_OF_WORLD; j < HALF_SIZE_OF_WORLD; j++) {
-			terrains.push_back(new Terrain(i, j, *loader, *texturePack, *blendMap, heightmap));
-		}
-	}
 
 	/*RawModel* plane = loader->loadToVAO(std::string("plane"));
 	ModelTexture* texture1 = new ModelTexture(loader->loadTexture("C:/Users/Кондрат/Downloads/OpenGL test/OpenGL test/dragon.png"));
@@ -383,7 +421,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	TexturedModel* playerTexturedModel = new TexturedModel(playerModel, playerTexture);
 
-	player = new Player(playerTexturedModel, glm::vec3(3000.0f, 0.0f, 3000.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	player = new Player(playerTexturedModel, glm::vec3(10.0f, 0.0f, -100.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
 	camera = new ModelViewCamera(*player);
 
 	// ************************ PLAYER ************************
@@ -437,34 +475,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 			//renderer->processEntity(*planeEntity);
 
-			// TO DO
-			float terX = player->getPosition().x / terrains[0]->getSizeOfSide();
-			float terZ = player->getPosition().z / terrains[0]->getSizeOfSide();
-
-			float fracX = terX - (int)terX;
-			float fracZ = terZ - (int)terZ;
-
-			if (fracX != 0) {
-				if (terX > 0) {
-					terX = terX - fracX;
-				}
-				else {
-					terX = terX - (1 + fracX);
-				}
-			}
-
-			if (fracZ != 0) {
-				if (terZ > 0) {
-					terZ = terZ - fracZ;
-				}
-				else {
-					terZ = terZ - (1 + fracZ);
-				}
-			}
-
-			int index = (HALF_SIZE_OF_WORLD + terX) * 4 + (HALF_SIZE_OF_WORLD + terZ);
-
-			player->move(delta / 1000.0f, *terrains[index]);
+			player->move(delta / 1000.0f, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
 			renderer->processEntity(*player);
 
 

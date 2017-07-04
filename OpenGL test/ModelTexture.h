@@ -11,6 +11,8 @@ class ModelTexture {
 	bool hasTransparency = false;
 	bool useFakeLighting = false;
 
+	int numberOfRows = 1;
+
 public:
 	ModelTexture(GLuint id) {
 		this->textureID = id;
@@ -50,5 +52,13 @@ public:
 
 	void setUseFakeLighting(float useFakeLighting) {
 		this->useFakeLighting = useFakeLighting;
+	}
+
+	int getNumberOfRows() {
+		return numberOfRows;
+	}
+
+	void setNumberOfRows(int numberOfRows) {
+		this->numberOfRows = numberOfRows;
 	}
 };

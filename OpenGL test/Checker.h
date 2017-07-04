@@ -6,13 +6,6 @@
 #include <GL/GL.h>
 #include "assert.h"
 
-//#define GL_ERROR(glCall)\
-//   glCall;\
-//   GLenum error = glGetError();\
-//   if (error != 0) {\
-//	   assert(0);\
-//   }
-
 #define GL_ERROR(glCall)                                                                           \
     do                                                                                             \
     {                                                                                              \

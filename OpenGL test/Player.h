@@ -8,7 +8,7 @@
 class Player : public Entity {
 
 	int currentKey = 0;
-	const float RUN_SPEED = 40;
+	const float RUN_SPEED = 80;
 	const float TURN_SPEED = 160;
 	const float GRAVITY = -50;
 	const float JUMP_POWER = 30;
