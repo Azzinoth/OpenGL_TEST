@@ -43,3 +43,12 @@ float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos) {
 	float l3 = 1.0f - l1 - l2;
 	return l1 * p1.y + l2 * p2.y + l3 * p3.y;
 }
+
+glm::mat4 createTransformationMatrix(glm::vec2 translation, glm::vec2 scale) {
+	glm::mat4 matrix = glm::mat4();
+
+	matrix = glm::translate(matrix, glm::vec3(translation, 0.0));
+	matrix = glm::scale(matrix, glm::vec3(scale.x, scale.y, 1.0f));
+	
+	return matrix;
+}

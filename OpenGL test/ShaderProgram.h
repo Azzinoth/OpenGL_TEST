@@ -13,7 +13,7 @@ class ShaderProgram {
 	std::vector<std::string> attributes;
 public:
 
-	ShaderProgram(const char* vertexText, const char* fragmentText, std::vector<std::string> attributes) {
+	ShaderProgram(const char* vertexText, const char* fragmentText, std::vector<std::string>&& attributes) {
 		vertexShaderID = loadShader(vertexText, GL_VERTEX_SHADER);
 		fragmentShaderID = loadShader(fragmentText, GL_FRAGMENT_SHADER);
 		this->attributes = attributes;

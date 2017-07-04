@@ -14,11 +14,11 @@ public:
 		this->vertexCount = vertexCount;
 	}
 
-	GLuint getVaoID() {
+	GLuint getVaoID() const {
 		return vaoID;
 	}
 
-	int getVertexCount() {
+	int getVertexCount() const {
 		return vertexCount;
 	}
 };

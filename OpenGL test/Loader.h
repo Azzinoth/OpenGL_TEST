@@ -74,6 +74,14 @@ public:
 		return new RawModel(vaoID, indices.size());
 	}
 
+	RawModel* loadToVAO(std::vector<float>& positions) {
+		GLuint vaoID = createVAO();
+		storeDataInAttributeList(0, 2, positions);
+		unbindVAO();
+
+		return new RawModel(vaoID, positions.size() / 2);
+	}
+
 	RawModel* loadToVAO(std::string& requiredModel) {
 		if (requiredModel == std::string("plane")) {
 			std::vector<float> positions = { -0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f };

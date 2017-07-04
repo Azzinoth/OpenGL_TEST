@@ -14,6 +14,7 @@
 #include "Player.h"
 #include "FreeCamera.h"
 #include "ModelViewCamera.h"
+#include "GuiRenderer.h"
 
 Loader* loader;
 EntityRenderer* renderer;
@@ -426,6 +427,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ PLAYER ************************
 
+	// ************************ GUIS ************************
+
+	std::vector<GuiTexture*> guis;
+	// pivot is at 0.5f, 0.5f !
+	guis.push_back(new GuiTexture(loader->loadTexture(RES_FOLDER "healthGui.png"), glm::vec2 (-0.75f, 0.9f), glm::vec2(0.25f, 0.25f)));
+	
+	GuiRenderer* guiRenderer = new GuiRenderer(*loader);
+
+	// ************************ GUIS ************************
+
 	bool inc = true;
 	GLenum error;
 	float RED = 1.0;
@@ -481,6 +492,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 			renderer->render(light, camera, glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f));
 
+			guiRenderer->render(guis);
+
 			//glClearColor(RED, 150.0f / 255.0f, 0.0f, 1.0f);
 			//glClear(GL_COLOR_BUFFER_BIT/* | GL_DEPTH_BUFFER_BIT*/);
 
@@ -488,6 +501,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
+	delete guiRenderer;
 	delete renderer;
 
     return (int)msg.wParam;
