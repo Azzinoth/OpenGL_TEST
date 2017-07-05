@@ -66,12 +66,12 @@ public:
 		GL_ERROR(glDisable(GL_CULL_FACE));
 	}
 
-	void render(Light* sun, Camera* camera, glm::vec3 skyColour) {
+	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour) {
 		this->skyColour = skyColour;
 		prepare();
 		shader->start();
 		shader->loadSkyColour(skyColour);
-		shader->loadLight(*sun);
+		shader->loadLights(lights);
 
 		camera->move(Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f);
 		shader->loadViewMatrix(*camera);
@@ -82,7 +82,7 @@ public:
 
 		terrainShader->start();
 		terrainShader->loadSkyColour(skyColour);
-		terrainShader->loadLight(*sun);
+		terrainShader->loadLights(lights);
 		terrainShader->loadViewMatrix(*camera);
 
 		terrainRenderer->render(terrains);

@@ -57,6 +57,9 @@ public:
 	}
 
 	void render(std::vector<Terrain*>& terrains) {
+		GL_ERROR(glEnable(GL_CULL_FACE));
+		GL_ERROR(glCullFace(GL_BACK));
+
 		for (auto terrain : terrains) {
 			prepareTerrain(*terrain);
 			loadModelMatrix(*terrain);

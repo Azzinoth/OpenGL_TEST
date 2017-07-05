@@ -27,12 +27,29 @@ public:
 
 		GL_ERROR(glDeleteShader(vertexShaderID));
 		GL_ERROR(glDeleteShader(fragmentShaderID));
+
+		// for tests
+		/*GLint uniform_count;
+		glGetProgramiv(this->programID, GL_ACTIVE_UNIFORMS, &uniform_count);
+
+		GLchar name[256];
+
+		for (GLint i = 0; i < uniform_count; i++) {
+			memset(name, '\0', 256);
+			GLint  size;
+			GLenum type;
+
+			glGetActiveUniform(programID, i, 255, NULL, &size, &type, name);
+
+			GLint location = glGetUniformLocation(programID, name);
+		}*/
 	}
 
 	virtual void getAllUniformLocation() = 0;
 
 	GLuint getUniformLocation(std::string uniformName) {
 		GLuint result = glGetUniformLocation(programID, uniformName.c_str());
+		GLint result_ = glGetUniformLocation(programID, uniformName.c_str());
 		GL_ERROR(result);
 		return result;
 	}
@@ -99,6 +116,15 @@ public:
 		GL_ERROR(glCompileShader(shaderID));
 		GLint status = 0;
 		GL_ERROR(glGetShaderiv(shaderID, GL_COMPILE_STATUS, &status));
+
+		if (status == GL_FALSE) {
+			GLint logSize = 0;
+			glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &logSize);
+			std::vector<GLchar> errorLog(logSize);
+
+			glGetShaderInfoLog(shaderID, logSize, &logSize, &errorLog[0]);
+			assert(status);
+		}
 
 		return shaderID;
 	}

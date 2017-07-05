@@ -10,16 +10,16 @@ in vec3 position;
 in vec2 textureCoords;
 in vec3 normal;
 
-out vec2 pass_texturecoords;
+out vec2 pass_textureCoordinates;
 out vec3 surfaceNormal;
-out vec3 toLightVector;
+out vec3 toLightVector[4];
 out vec3 toCameraVector;
 out float visibility;
 
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
-uniform vec3 lightPosition;
+uniform vec3 lightPosition[4];
 
 const float density = 0.007;
 const float gradient = 1.5;
@@ -29,10 +29,13 @@ void main(void) {
 
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projectionMatrix * positionRelativeToCam;
-	pass_texturecoords = textureCoords;
+	pass_textureCoordinates = textureCoords;
 
 	surfaceNormal = (transformationMatrix * vec4(normal, 0.0)).xyz;
-	toLightVector = lightPosition - worldPosition.xyz;
+	for (int i = 0; i < 4; i++) {
+		toLightVector[i] = lightPosition[i] - worldPosition.xyz;
+	}
+
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 0.0)).xyz - worldPosition.xyz;
 
 	float distance = length(positionRelativeToCam.xyz) / 14.0; // fog on ground set 2.0 or 7.0 to disable
@@ -44,13 +47,13 @@ void main(void) {
 static const char* const sTerrainFragmentShader = R"(
 #version 400 core
 
-in vec2 pass_texturecoords;
+in vec2 pass_textureCoordinates;
 in vec3 surfaceNormal;
-in vec3 toLightVector;
+in vec3 toLightVector[4];
 in vec3 toCameraVector;
 in float visibility;
 
-out vec4 out_Colour;
+out vec4 out_Color;
 
 uniform sampler2D backgroundTexture;
 uniform sampler2D rTexture;
@@ -58,17 +61,18 @@ uniform sampler2D gTexture;
 uniform sampler2D bTexture;
 uniform sampler2D blendMap;
 
-uniform vec3 lightColour;
+uniform vec3 lightColour[4];
+uniform vec3 attenuation[4];
 uniform float shineDamper;
 uniform float reflectivity;
 uniform vec3 skyColour;
 
 void main(void) {
 
-	vec4 blendMapColour = texture(blendMap, pass_texturecoords);
+	vec4 blendMapColour = texture(blendMap, pass_textureCoordinates);
 	
 	float backTextureAmount = 1 - (blendMapColour.r + blendMapColour.g + blendMapColour.b);
-	vec2 tiledCoords = pass_texturecoords * 40.0;
+	vec2 tiledCoords = pass_textureCoordinates * 40.0;
 	vec4 backgroundTexturecolour = texture(backgroundTexture, tiledCoords) * backTextureAmount;
 	vec4 rTexturecolour = texture(rTexture, tiledCoords) * blendMapColour.r;
 	vec4 gTexturecolour = texture(gTexture, tiledCoords) * blendMapColour.g;
@@ -76,35 +80,45 @@ void main(void) {
 
 	vec4 totalColour = backgroundTexturecolour + rTexturecolour + gTexturecolour + bTexturecolour;
 
-	vec3 unitNormal = normalize(surfaceNormal);
-	vec3 unitLightVector = normalize(toLightVector);
-
-	float nDotl = dot(unitNormal, unitLightVector);
-	float brightness = max(nDotl, 0.2); // Ambient light(don't correct);
-	vec3 diffuse = brightness * lightColour;
-
+    vec3 unitNormal = normalize(surfaceNormal);
 	vec3 unitVectorToCamera = normalize(toCameraVector);
-	vec3 lightDirection = -unitLightVector;
-	vec3 reflectedLightdirection = reflect(lightDirection, unitNormal);
-	
-	float specularFactor = dot(reflectedLightdirection, unitVectorToCamera);
-	specularFactor = max(specularFactor, 0.0);
-	float dampedFactor = pow(specularFactor, shineDamper);
-	vec3 finalSpecular = dampedFactor * reflectivity * lightColour;
 
-	out_Colour = vec4(diffuse, 1.0) * totalColour + vec4(finalSpecular, 1.0);
-	out_Colour = mix (vec4(skyColour, 1.0), out_Colour, visibility);
+	vec3 totalDiffuse = vec3(0.0);
+	vec3 totalSpecular = vec3(0.0);
+
+	for (int i = 0; i < 4; i++) {
+		float distance = length(toLightVector[i]);
+		float attFactor = attenuation[i].x + attenuation[i].y * distance + attenuation[i].z * distance * distance;
+		vec3 unitLightVector = normalize(toLightVector[i]);
+		float nDotl = dot(unitNormal, unitLightVector);
+		float brightness = max(nDotl, 0.0);
+		vec3 lightDirection = -unitLightVector;
+		vec3 reflectedLightdirection = reflect(lightDirection, unitNormal);
+		float specularFactor = dot(reflectedLightdirection, unitVectorToCamera);
+		specularFactor = max(specularFactor, 0.0);
+		float dampedFactor = pow(specularFactor, shineDamper);
+		totalDiffuse = totalDiffuse + (brightness * lightColour[i]) / attFactor;
+		totalSpecular = totalSpecular + (dampedFactor * reflectivity * lightColour[i]) / attFactor;
+	}
+
+	totalDiffuse = max(totalDiffuse, 0.2);
+
+	out_Color = vec4(totalDiffuse, 1.0) * totalColour + vec4(totalSpecular, 1.0);
+	out_Color = mix (vec4(skyColour, 1.0), out_Color, visibility);
 
 }
 )";
 
 class TerrainShader : public ShaderProgram {
 
+	const int MAX_LIGHTS = 4;
+
 	GLuint location_transformationMatrix;
 	GLuint location_projectionMatrix;
 	GLuint location_viewMatrix;
-	GLuint location_lightPosition;
-	GLuint location_lightColour;
+	std::vector<GLuint> location_lightPosition;
+	std::vector<GLuint> location_lightColour;
+	std::vector<GLuint> location_attenuation;
 	GLuint location_shineDamper;
 	GLuint location_reflectivity;
 	GLuint location_skyColour;
@@ -130,8 +144,35 @@ public:
 		location_transformationMatrix = getUniformLocation("transformationMatrix");
 		location_projectionMatrix = getUniformLocation("projectionMatrix");
 		location_viewMatrix = getUniformLocation("viewMatrix");
-		location_lightPosition = getUniformLocation("lightPosition");
-		location_lightColour = getUniformLocation("lightColour");
+
+		location_lightPosition.resize(MAX_LIGHTS);
+		location_lightColour.resize(MAX_LIGHTS);
+		location_attenuation.resize(MAX_LIGHTS);
+
+		for (int i = 0; i < MAX_LIGHTS; i++) {
+			std::string nameOfLocation = "lightPosition[";
+			char buffer[10];
+			_itoa(i, buffer, 10);
+			nameOfLocation += buffer;
+			nameOfLocation += "]";
+
+			location_lightPosition[i] = getUniformLocation(nameOfLocation);
+
+			nameOfLocation = "lightColour[";
+			_itoa(i, buffer, 10);
+			nameOfLocation += buffer;
+			nameOfLocation += "]";
+
+			location_lightColour[i] = getUniformLocation(nameOfLocation);
+
+			nameOfLocation = "attenuation[";
+			_itoa(i, buffer, 10);
+			nameOfLocation += buffer;
+			nameOfLocation += "]";
+
+			location_attenuation[i] = getUniformLocation(nameOfLocation);
+		}
+
 		location_shineDamper = getUniformLocation("shineDamper");
 		location_reflectivity = getUniformLocation("reflectivity");
 		location_skyColour = getUniformLocation("skyColour");
@@ -154,9 +195,19 @@ public:
 		loadMatrix(location_viewMatrix, createViewMatrix(camera));
 	}
 
-	void loadLight(Light& light) {
-		loadVector(location_lightColour, light.getColour());
-		loadVector(location_lightPosition, light.getPosition());
+	void loadLights(std::vector<Light*>& lights) {
+		for (int i = 0; i < MAX_LIGHTS; i++) {
+			if (i < lights.size()) {
+				loadVector(location_lightPosition[i], lights[i]->getPosition());
+				loadVector(location_lightColour[i], lights[i]->getColour());
+				loadVector(location_attenuation[i], lights[i]->getAttenuation());
+			}
+			else {
+				loadVector(location_lightPosition[i], glm::vec3(0.0, 0.0, 0.0));
+				loadVector(location_lightColour[i], glm::vec3(0.0, 0.0, 0.0));
+				loadVector(location_attenuation[i], glm::vec3(1.0, 0.0, 0.0));
+			}
+		}
 	}
 
 	void loadShineVariables(float damper, float reflectivity) {

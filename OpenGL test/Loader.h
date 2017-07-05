@@ -107,6 +107,7 @@ public:
 		GLuint texture = png_texture_load(fileName.c_str(), &w, &h);
 		GL_ERROR(glGenerateMipmap(GL_TEXTURE_2D));
 		GL_ERROR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+		GL_ERROR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)); // smooth textures not blocky :)
 		GL_ERROR(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.8f));
 
 		textures.push_back(texture);
