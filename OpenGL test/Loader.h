@@ -74,12 +74,12 @@ public:
 		return new RawModel(vaoID, indices.size());
 	}
 
-	RawModel* loadToVAO(std::vector<float>& positions) {
+	RawModel* loadToVAO(std::vector<float>& positions, int dimensions = 2) {
 		GLuint vaoID = createVAO();
-		storeDataInAttributeList(0, 2, positions);
+		storeDataInAttributeList(0, dimensions, positions);
 		unbindVAO();
 
-		return new RawModel(vaoID, positions.size() / 2);
+		return new RawModel(vaoID, positions.size() / dimensions);
 	}
 
 	RawModel* loadToVAO(std::string& requiredModel) {
@@ -103,8 +103,7 @@ public:
 	}
 
 	GLuint loadTexture(std::string fileName) {
-		int w,h;
-		GLuint texture = png_texture_load(fileName.c_str(), &w, &h);
+		GLuint texture = png_texture_load(fileName.c_str());
 		GL_ERROR(glGenerateMipmap(GL_TEXTURE_2D));
 		GL_ERROR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
 		GL_ERROR(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)); // smooth textures not blocky :)
@@ -112,6 +111,10 @@ public:
 
 		textures.push_back(texture);
 		return texture;
+	}
+
+	std::vector<unsigned char> loadTextureData(std::string fileName, int& w, int& h) {
+		return png_texture_loadData(fileName.c_str(), w, h);;
 	}
 
 	RawModel* loadFromOBJ(const char* fileName) {
@@ -266,6 +269,30 @@ public:
 		//
 
 		return loadToVAO(objects.front()->verticesArray, objects.front()->texturesArray, objects.front()->normalsArray, objects.front()->indicesArray);
+	}
+
+	GLuint loadCubeMap(std::vector<std::string>& textureFiles) {
+		GLuint texID;
+		GL_ERROR(glGenTextures(1, &texID));
+		GL_ERROR(glActiveTexture(GL_TEXTURE0));
+		GL_ERROR(glBindTexture(GL_TEXTURE_CUBE_MAP, texID));
+
+		for (int i = 0; i < textureFiles.size(); i++) {
+			int w = 0, h = 0;
+			std::vector<unsigned char> data = png_texture_loadData(textureFiles[i].c_str(), w, h);
+			GL_ERROR(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()));
+		}
+
+		GL_ERROR(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+		GL_ERROR(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+
+		// Due to hardware limitations on some computers you may see some visible seams at the edges of the skybox. 
+		// If this is the case then add these two lines to the end of the loadCubeMap() method, just before returning the texID
+		GL_ERROR(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+		GL_ERROR(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+		textures.push_back(texID);
+		return texID;
 	}
 
 	void cleanUp() {

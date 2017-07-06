@@ -36,6 +36,17 @@ glm::mat4 createViewMatrix(Camera& camera) {
 	return ViewMatrix;
 }
 
+glm::mat4 createViewMatrixForSkybox(Camera& camera) {
+	glm::mat4& ViewMatrix = camera.getViewMatrix();
+	ViewMatrix = glm::mat4();
+
+	ViewMatrix = glm::rotate(ViewMatrix, camera.getPitch() * ANGLE_TORADIANS_COF, glm::vec3(1, 0, 0));
+	ViewMatrix = glm::rotate(ViewMatrix, camera.getYaw() * ANGLE_TORADIANS_COF, glm::vec3(0, 1, 0));
+	ViewMatrix = glm::rotate(ViewMatrix, camera.getRoll() * ANGLE_TORADIANS_COF, glm::vec3(0, 0, 1));
+
+	return ViewMatrix;
+}
+
 float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos) {
 	float det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
 	float l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;

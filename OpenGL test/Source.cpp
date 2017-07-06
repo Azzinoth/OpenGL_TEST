@@ -416,7 +416,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const float firstLightZ = -350.0f;
 
 	std::vector<Light*> lights;
-	lights.push_back(new Light(glm::vec3(0.0f, 1000.0f, -7000.0f), glm::vec3(0.6f, 0.6f, 0.6f)));
+	lights.push_back(new Light(glm::vec3(0.0f, 1000.0f, -7000.0f), glm::vec3(1.6f, 1.6f, 1.6f)));
 	lights.push_back(new Light(glm::vec3(firstLightX, getTerrainY(firstLightX, firstLightZ, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, firstLightZ), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
 	lights.push_back(new Light(glm::vec3(370.0f, getTerrainY(370.0f, -300.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -300.0f), glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
 	lights.push_back(new Light(glm::vec3(280.0f, getTerrainY(280.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -405.0f), glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
@@ -457,7 +457,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	TexturedModel* texturedRock = new TexturedModel(rock, rockTexture);
 	Entity* rockEntity = new Entity(texturedRock, glm::vec3(250.0f, getTerrainY(220.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.05f);
 
-	MasterRenderer* renderer = new MasterRenderer(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f));
+	MasterRenderer* renderer = new MasterRenderer(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f), *loader,
+												  { RES_FOLDER "skyBox/right.png", RES_FOLDER "skyBox/left.png", RES_FOLDER "skyBox/top.png", RES_FOLDER "skyBox/bottom.png", RES_FOLDER "skyBox/back.png", RES_FOLDER "skyBox/front.png" },
+												  { RES_FOLDER "skyBox/nightRight.png", RES_FOLDER "skyBox/nightLeft.png", RES_FOLDER "skyBox/nightTop.png", RES_FOLDER "skyBox/nightBottom.png", RES_FOLDER "skyBox/nightBack.png", RES_FOLDER "skyBox/nightFront.png" });
 
 	// ************************ PLAYER ************************
 	RawModel* playerModel = loader->loadFromOBJ(RES_FOLDER "person.obj");
@@ -468,8 +470,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	TexturedModel* playerTexturedModel = new TexturedModel(playerModel, playerTexture);
 
 	player = new Player(playerTexturedModel, glm::vec3(153.0f, 5.0f, -274.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
-	//camera = new ModelViewCamera(*player);
-	camera = new ModelViewCamera(*rockEntity);
+	camera = new ModelViewCamera(*player);
+	//camera = new ModelViewCamera(*rockEntity);
 
 	// ************************ PLAYER ************************
 
@@ -484,7 +486,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// ************************ GUIS ************************
 
 	bool inc = true;
-	GLenum error;
 	float RED = 1.0;
     while (msg.message != WM_QUIT)
     {
@@ -542,13 +543,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			player->move(delta / 1000.0f, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
 			renderer->processEntity(*player);
 			
-
-			renderer->render(lights, camera, glm::vec3(30.0f / 255.0f, 25.0f / 255.0f, 25.0f / 255.0f));
-
+			renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f), delta);
 			guiRenderer->render(guis);
-
-			//glClearColor(RED, 150.0f / 255.0f, 0.0f, 1.0f);
-			//glClear(GL_COLOR_BUFFER_BIT/* | GL_DEPTH_BUFFER_BIT*/);
 
             SwapBuffers(g_hDC);
         }

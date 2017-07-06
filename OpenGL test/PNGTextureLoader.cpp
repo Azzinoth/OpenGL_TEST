@@ -14,13 +14,12 @@
 
 #include "thirdparty/lodepng.h"
 
-GLuint png_texture_load(const char* file_name, int* width, int* height)
-{
+GLuint png_texture_load(const char* file_name) {
 	std::vector<unsigned char> image; //the raw pixels
-	unsigned width_, height_;
+	unsigned width, height;
 
 	//decode
-	unsigned error = lodepng::decode(image, width_, height_, file_name);
+	unsigned error = lodepng::decode(image, width, height, file_name);
 
 	//if there's an error, display it
 	if (error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
@@ -31,9 +30,21 @@ GLuint png_texture_load(const char* file_name, int* width, int* height)
 	GLuint texture;
 	GL_ERROR(glGenTextures(1, &texture));
 	GL_ERROR(glBindTexture(GL_TEXTURE_2D, texture));
-	GL_ERROR(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data()));
+	GL_ERROR(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data()));
 	GL_ERROR(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 	GL_ERROR(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
 	return texture;
+}
+
+std::vector<unsigned char> png_texture_loadData(const char* file_name, int& width, int& height) {
+	std::vector<unsigned char> image;
+	unsigned uWidth, uHeight;
+
+	lodepng::decode(image, uWidth, uHeight, file_name);
+
+	width = uWidth;
+	height = uHeight;
+
+	return image;
 }

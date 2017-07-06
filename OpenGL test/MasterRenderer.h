@@ -2,6 +2,7 @@
 
 #include "EntityRenderer.h"
 #include "TerrainRenderer.h"
+#include "SkyboxRenderer.h"
 #include "Time.h"
 class Time;
 
@@ -17,12 +18,14 @@ class MasterRenderer {
 	TerrainRenderer* terrainRenderer;
 	TerrainShader* terrainShader;
 
+	SkyboxRenderer* skyboxRenderer;
+
 	std::map<TexturedModel*, std::vector<Entity*>> entities;
 	std::vector<Terrain*> terrains;
 
 	const float FOV = 70.0f;
 	const float NEAR_PLANE = 0.1f;
-	const float FAR_PLANE = 5000.0f;
+	const float FAR_PLANE = 15000.0f;
 
 	glm::vec3 skyColour;
 	glm::mat4 projectionMatrix;
@@ -43,10 +46,10 @@ class MasterRenderer {
 	}
 
 public:
-	MasterRenderer(glm::vec3 skyColour) {
+	MasterRenderer(glm::vec3 skyColour, Loader& loader, std::vector<std::string>&& skyboxTextureFiles, std::vector<std::string>&& secondSkyboxTextureFiles) {
 		time = new Time();
 		this->skyColour = skyColour;
-
+		
 		enableCulling();
 
 		shader = new StaticShader();
@@ -55,6 +58,8 @@ public:
 
 		terrainShader = new TerrainShader();
 		terrainRenderer = new TerrainRenderer(*terrainShader, projectionMatrix);
+
+		skyboxRenderer = new SkyboxRenderer(loader, projectionMatrix, skyboxTextureFiles, secondSkyboxTextureFiles);
 	}
 
 	void enableCulling() {
@@ -66,7 +71,7 @@ public:
 		GL_ERROR(glDisable(GL_CULL_FACE));
 	}
 
-	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour) {
+	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour, float deltaTime) {
 		this->skyColour = skyColour;
 		prepare();
 		shader->start();
@@ -86,8 +91,9 @@ public:
 		terrainShader->loadViewMatrix(*camera);
 
 		terrainRenderer->render(terrains);
-
 		terrainShader->stop();
+
+		skyboxRenderer->render(*camera, skyColour, deltaTime);
 
 		terrains.clear();
 		entities.clear();
