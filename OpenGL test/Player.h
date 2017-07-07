@@ -21,8 +21,8 @@ class Player : public Entity {
 
 public:
 
-	Player(TexturedModel* model, glm::vec3 position, glm::vec3 rotation, float scale)
-		: Entity(model, position, rotation, scale) {
+	Player(Loader& loader, TexturedModel* model, glm::vec3 position, glm::vec3 rotation, float scale)
+		: Entity(loader, model, position, rotation, scale) {
 	}
 
 	void setKey(int key) {
@@ -47,7 +47,8 @@ public:
 		}
 	}
 
-	void move(float deltaTime, Terrain& terrain) {
+	void move(Terrain& terrain) {
+		float deltaTime = Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f;
 		float angle = currentTurnSpeed * deltaTime;
 		this->increaseRotation(glm::vec3(0.0f, angle, 0.0f));
 		float distance = currentSpeed * deltaTime;

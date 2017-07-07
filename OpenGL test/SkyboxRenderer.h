@@ -70,21 +70,21 @@ public:
 		shader->stop();
 	}
 
-	void render(Camera& camera, glm::vec3 fogColor, float deltaTime) {
+	void render(Camera& camera, glm::vec3 fogColor) {
 		shader->start();
 		shader->loadViewMatrix(camera);
 		shader->loadFogColor(fogColor);
 		GL_ERROR(glBindVertexArray(cube->getVaoID()));
 		GL_ERROR(glEnableVertexAttribArray(0));
-		bindTextures(deltaTime);
+		bindTextures();
 		GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, cube->getVertexCount()));
 		GL_ERROR(glDisableVertexAttribArray(0));
 		GL_ERROR(glBindVertexArray(0));
 		shader->stop();
 	}
 
-	void bindTextures(float deltaTime) {
-		time += deltaTime;
+	void bindTextures() {
+		time += Time::getInstance().getTimePassedFromLastCallMS()/*deltaTime*/;
 		time %= 24000;
 
 		GLuint texture1;

@@ -15,6 +15,7 @@
 #include "FreeCamera.h"
 #include "ModelViewCamera.h"
 #include "GuiRenderer.h"
+#include "MousePicker.h"
 
 Loader* loader;
 EntityRenderer* renderer;
@@ -320,7 +321,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelZ += noizeZ;
 
 		entityPosition = { modelX, getTerrainY(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD) - 4.0f, modelZ };
-		trees.push_back(new Entity(treeTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		trees.push_back(new Entity(*loader, treeTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ TREES ************************
 
@@ -349,7 +350,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelZ += noizeZ;
 
 		entityPosition = { modelX, getTerrainY(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD) - 2.0f, modelZ };
-		ferns.push_back(new Entity(fernTexturedModel, rand() % 4 , entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		ferns.push_back(new Entity(*loader, fernTexturedModel, rand() % 4 , entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ FERNS ************************
 
@@ -378,7 +379,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelZ += noizeZ;
 
 		entityPosition = { modelX, getTerrainY(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD) - 2.0f, modelZ };
-		grasses.push_back(new Entity(grassTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		grasses.push_back(new Entity(*loader, grassTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ GRASSES ************************
 
@@ -406,7 +407,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		modelZ += noizeZ;
 
 		entityPosition = { modelX, getTerrainY(modelX, modelZ, terrains, HALF_SIZE_OF_WORLD) - 0.0f, modelZ };
-		flowers.push_back(new Entity(flowerTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
+		flowers.push_back(new Entity(*loader, flowerTexturedModel, entityPosition, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f));
 	}
 	// ************************ FLOWERS ************************
 
@@ -416,7 +417,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const float firstLightZ = -350.0f;
 
 	std::vector<Light*> lights;
-	lights.push_back(new Light(glm::vec3(0.0f, 1000.0f, -7000.0f), glm::vec3(1.6f, 1.6f, 1.6f)));
+	lights.push_back(new Light(glm::vec3(0.0f, 10000.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
 	lights.push_back(new Light(glm::vec3(firstLightX, getTerrainY(firstLightX, firstLightZ, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, firstLightZ), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
 	lights.push_back(new Light(glm::vec3(370.0f, getTerrainY(370.0f, -300.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -300.0f), glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
 	lights.push_back(new Light(glm::vec3(280.0f, getTerrainY(280.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -405.0f), glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
@@ -426,9 +427,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	lampTexture->setUseFakeLighting(true);
 	TexturedModel* texturedLamp = new TexturedModel(lamp, lampTexture);
 	
-	Entity* lampEntity = new Entity(texturedLamp, glm::vec3(firstLightX, getTerrainY(firstLightX, firstLightZ, terrains, HALF_SIZE_OF_WORLD), firstLightZ), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
-	Entity* lampEntity1 = new Entity(texturedLamp, glm::vec3(370.0f, getTerrainY(370.0f, -300.0f, terrains, HALF_SIZE_OF_WORLD), -300.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
-	Entity* lampEntity2 = new Entity(texturedLamp, glm::vec3(280.0f, getTerrainY(280.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	Entity* lampEntity = new Entity(*loader, texturedLamp, glm::vec3(firstLightX, getTerrainY(firstLightX, firstLightZ, terrains, HALF_SIZE_OF_WORLD), firstLightZ), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	Entity* lampEntity1 = new Entity(*loader, texturedLamp, glm::vec3(370.0f, getTerrainY(370.0f, -300.0f, terrains, HALF_SIZE_OF_WORLD), -300.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	Entity* lampEntity2 = new Entity(*loader, texturedLamp, glm::vec3(280.0f, getTerrainY(280.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
 	
 	// ************************ LIGHTS ************************
 
@@ -455,7 +456,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RawModel* rock = loader->loadFromOBJ(RES_FOLDER "rock2.obj");
 	ModelTexture* rockTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "rock.png"));
 	TexturedModel* texturedRock = new TexturedModel(rock, rockTexture);
-	Entity* rockEntity = new Entity(texturedRock, glm::vec3(250.0f, getTerrainY(220.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.05f);
+	Entity* rockEntity = new Entity(*loader, texturedRock, glm::vec3(250.0f, getTerrainY(220.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.05f);
 
 	MasterRenderer* renderer = new MasterRenderer(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f), *loader,
 												  { RES_FOLDER "skyBox/right.png", RES_FOLDER "skyBox/left.png", RES_FOLDER "skyBox/top.png", RES_FOLDER "skyBox/bottom.png", RES_FOLDER "skyBox/back.png", RES_FOLDER "skyBox/front.png" },
@@ -469,7 +470,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	TexturedModel* playerTexturedModel = new TexturedModel(playerModel, playerTexture);
 
-	player = new Player(playerTexturedModel, glm::vec3(153.0f, 5.0f, -274.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	player = new Player(*loader, playerTexturedModel, glm::vec3(153.0f, 5.0f, -274.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
 	camera = new ModelViewCamera(*player);
 	//camera = new ModelViewCamera(*rockEntity);
 
@@ -485,6 +486,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ GUIS ************************
 
+	MousePicker* mousePicker = new MousePicker(*camera, renderer->getProjectionMatrix(), WIN_W, WIN_H, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
+
 	bool inc = true;
 	float RED = 1.0;
     while (msg.message != WM_QUIT)
@@ -498,6 +501,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
 			Sleep(10);
 
+			mousePicker->update();
+
 			/*if (inc) {
 				light->setPosition(glm::vec3(light->getPosition().x + 3, light->getPosition().y, light->getPosition().z));
 				if (light->getPosition().x > 1100) inc = false;
@@ -509,7 +514,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}*/
 
 			Time time = Time::getInstance();
-			float delta = time.getTimePassedFromLastCallMS();
+			time.startNewFrame();
+			//float delta = time.getTimePassedFromLastCallMS();
 
 			for (auto terrain : terrains) {
 				renderer->processTerrain(*terrain);
@@ -518,6 +524,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			for (auto tree : trees) {
 				renderer->processEntity(*tree);
 			}
+
+			lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z - 2.0f));
+			lights[1]->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y + 14.7f * 1.5f, mousePicker->getCurrentTerrainPoint().z));
 
 			for (auto fern : ferns) {
 				renderer->processEntity(*fern);
@@ -540,10 +549,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			renderer->processEntity(*lampEntity1);
 			renderer->processEntity(*lampEntity2);
 
-			player->move(delta / 1000.0f, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
+			player->move(*terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
 			renderer->processEntity(*player);
 			
-			renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f), delta);
+			renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f));
 			guiRenderer->render(guis);
 
             SwapBuffers(g_hDC);
@@ -625,10 +634,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_MOUSEMOVE:
 		{
-			POINT mouse;
-			GetCursorPos(&mouse);
+			int mouseX = GET_X_LPARAM(lParam);
+			int mouseY = GET_Y_LPARAM(lParam);
+			//POINT mouse;
+			//GetCursorPos(&mouse);
 
-			camera->setMouseCoordinates(mouse.x, mouse.y);
+			camera->setMouseCoordinates(mouseX, mouseY);
+			Input::getInstance().setMouseCoordinates(mouseX, mouseY);
 		}
 		break;
 

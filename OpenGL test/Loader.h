@@ -1,6 +1,8 @@
 #pragma once
+
 #include "RawModel.h"
 #include "PNGTextureLoader.h"
+#include "Checker.h"
 #include <string>
 
 struct OBJObject {
@@ -142,6 +144,9 @@ public:
 		int normalDisplacementCounter = 0;
 		int vertexDisplacementCounter = 0;
 
+		glm::vec3 minVertex = glm::vec3(0.0);
+		glm::vec3 maxVertex = glm::vec3(0.0);
+
 		std::vector<std::string> data;
 
 		while (!feof(myFile)) {
@@ -169,7 +174,31 @@ public:
 				data.clear();
 				mySplit(line, " ",data);
 
-				vertices.push_back(glm::vec3(std::stof(data[1]), std::stof(data[2]), std::stof(data[3])));
+				glm::vec3 currentVertex = { std::stof(data[1]), std::stof(data[2]), std::stof(data[3]) };
+				vertices.push_back(currentVertex);
+
+				// looking for min, max of boundingbox.
+				if (vertices.size() == 3) {
+					minVertex = currentVertex;
+					maxVertex = currentVertex;
+				}
+
+				if (minVertex.x > currentVertex.x) minVertex.x = currentVertex.x;
+				if (minVertex.y > currentVertex.y) minVertex.y = currentVertex.y;
+				if (minVertex.z > currentVertex.z) minVertex.z = currentVertex.z;
+
+				if (maxVertex.x < currentVertex.x) maxVertex.x = currentVertex.x;
+				if (maxVertex.y < currentVertex.y) maxVertex.y = currentVertex.y;
+				if (maxVertex.z < currentVertex.z) maxVertex.z = currentVertex.z;
+
+				/*if (vertices.size() == 3) {
+					minVertex = currentVertex;
+					maxVertex = currentVertex;
+				} else if ((minVertex.x + minVertex.y + minVertex.z) > (currentVertex.x + currentVertex.y + currentVertex.z)) {
+					minVertex = currentVertex;
+				} else if ((maxVertex.x + maxVertex.y + maxVertex.z) < (currentVertex.x + currentVertex.y + currentVertex.z)) {
+					maxVertex = currentVertex;
+				}*/
 
 				delete[] line;
 			}
@@ -268,7 +297,11 @@ public:
 		//
 		//
 
-		return loadToVAO(objects.front()->verticesArray, objects.front()->texturesArray, objects.front()->normalsArray, objects.front()->indicesArray);
+		RawModel* model = loadToVAO(objects.front()->verticesArray, objects.front()->texturesArray, objects.front()->normalsArray, objects.front()->indicesArray);
+		model->setBoundingboxMin(minVertex);
+		model->setBoundingboxMax(maxVertex);
+
+		return model;
 	}
 
 	GLuint loadCubeMap(std::vector<std::string>& textureFiles) {

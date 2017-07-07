@@ -78,8 +78,31 @@ public:
 			for (auto batch : entities[key]) {
 				prepareInstance(*batch);
 				GL_ERROR(glDrawElements(GL_TRIANGLES, key->getRawModel()->getVertexCount(), GL_UNSIGNED_INT, 0));
+
+				/*GL_ERROR(glBindVertexArray(batch->getBoundingbox()->getVaoID()));
+				GL_ERROR(glEnableVertexAttribArray(0));
+
+				GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, batch->getBoundingbox()->getVertexCount()));
+
+				GL_ERROR(glDisableVertexAttribArray(0));
+				GL_ERROR(glBindVertexArray(0));*/
 			}
 			unbindTexturedModel();
 		}
+
+		// bounding boxes
+		//for (auto key : keys) {
+		//	for (auto batch : entities[key]) {
+		//		shader->loadTransformationMatrix(batch->getTransformationMatrix());
+
+		//		GL_ERROR(glBindVertexArray(batch->getBoundingbox()->getVaoID()));
+		//		GL_ERROR(glEnableVertexAttribArray(0));
+
+		//		GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, batch->getBoundingbox()->getVertexCount()));
+
+		//		GL_ERROR(glDisableVertexAttribArray(0));
+		//		GL_ERROR(glBindVertexArray(0));
+		//	}
+		//}
 	}
 };

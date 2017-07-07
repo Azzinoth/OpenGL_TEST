@@ -6,11 +6,15 @@
 #include "Time.h"
 class Time;
 
+#include "Input.h"
+class Input;
+
 #include <map>
 
 class MasterRenderer {
 
 	Time* time;
+	Input* input;
 
 	StaticShader* shader;
 	EntityRenderer* renderer;
@@ -48,6 +52,7 @@ class MasterRenderer {
 public:
 	MasterRenderer(glm::vec3 skyColour, Loader& loader, std::vector<std::string>&& skyboxTextureFiles, std::vector<std::string>&& secondSkyboxTextureFiles) {
 		time = new Time();
+		input = new Input();
 		this->skyColour = skyColour;
 		
 		enableCulling();
@@ -71,7 +76,7 @@ public:
 		GL_ERROR(glDisable(GL_CULL_FACE));
 	}
 
-	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour, float deltaTime) {
+	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour) {
 		this->skyColour = skyColour;
 		prepare();
 		shader->start();
@@ -93,7 +98,7 @@ public:
 		terrainRenderer->render(terrains);
 		terrainShader->stop();
 
-		skyboxRenderer->render(*camera, skyColour, deltaTime);
+		skyboxRenderer->render(*camera, skyColour);
 
 		terrains.clear();
 		entities.clear();
@@ -121,6 +126,9 @@ public:
 		delete renderer;
 		delete terrainShader;
 		delete terrainRenderer;
+
+		delete time;
+		delete input;
 	}
 
 	void prepare() {
@@ -130,6 +138,10 @@ public:
 		GLenum error_ = glGetError();
 		error_;
 		GL_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+	}
+
+	glm::mat4 getProjectionMatrix() {
+		return projectionMatrix;
 	}
 
 	~MasterRenderer() {

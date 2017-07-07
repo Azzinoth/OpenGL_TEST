@@ -15,6 +15,8 @@ class Time {
 		LastTickCount = GetTickCount();
 	}
 
+	DWORD delta;
+
 public:
 	static Time& getInstance() {
 		static Time time;
@@ -29,12 +31,14 @@ public:
 		return getCurrentTimeMS()/1000.0;
 	}
 
-	float getTimePassedFromLastCallMS() {
+	void startNewFrame() {
 		CurrentTickCount = GetTickCount();
-		DWORD delta = CurrentTickCount - LastTickCount;
+		Time::getInstance().delta = CurrentTickCount - LastTickCount;
 		Time::getInstance().LastTickCount = GetTickCount();
+	}
 
-		return delta;
+	float getTimePassedFromLastCallMS() {
+		return Time::getInstance().delta;
 	}
 
 	float getTimePassedFromLastCallS() {
