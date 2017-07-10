@@ -10,7 +10,7 @@ class FreeCamera : public Camera {
 	float current_mouse_x_angle = 0;
 	float current_mouse_y_angle = 0;
 
-	const int correctionToSensitivity = 5;
+	const int correctionToSensitivity = 3;
 	HWND hWnd;
 
 public:
@@ -61,11 +61,17 @@ public:
 			position.y += right.y;
 			position.z += right.z;
 		}
+
+		setMouseCoordinates();
 	}
 
-	virtual void setMouseCoordinates(int mouseX, int mouseY) final {
+	virtual void setMouseCoordinates() final {
+		int mouseX = Input::getInstance().getMouseX();
+		int mouseY = Input::getInstance().getMouseY();
+
 		if (last_mouse_x == 0) last_mouse_x = mouseX;
 		if (last_mouse_y == 0) last_mouse_y = mouseY;
+		
 
 		auto setCursorToCenter = [&]() {
 			if (hWnd == GetActiveWindow()) {
@@ -77,24 +83,27 @@ public:
 				last_mouse_y = screen_wr.top + ((rc.bottom - rc.top) / 2);
 
 				SetCursorPos(last_mouse_x, last_mouse_y);
+
+				last_mouse_x = last_mouse_x - screen_wr.left - 8;
+				last_mouse_y = last_mouse_y - screen_wr.top - 31;
 			}
 		};
 
 		if (last_mouse_x < mouseX && abs(last_mouse_x - mouseX) > correctionToSensitivity) {
-			current_mouse_x_angle += (mouseX - last_mouse_x) * 0.3f;
+			current_mouse_x_angle += (mouseX - last_mouse_x) * 0.15f;
 			setCursorToCenter();
 		}
 		else if (abs(last_mouse_x - mouseX) > correctionToSensitivity) {
-			current_mouse_x_angle += (mouseX - last_mouse_x) * 0.3f;
+			current_mouse_x_angle += (mouseX - last_mouse_x) * 0.15f;
 			setCursorToCenter();
 		}
 
 		if (last_mouse_y < mouseY && abs(last_mouse_y - mouseY) > correctionToSensitivity) {
-			current_mouse_y_angle += (mouseY - last_mouse_y) * 0.3f;
+			current_mouse_y_angle += (mouseY - last_mouse_y) * 0.15f;
 			setCursorToCenter();
 		}
 		else if (abs(last_mouse_y - mouseY) > correctionToSensitivity) {
-			current_mouse_y_angle += (mouseY - last_mouse_y) * 0.3f;
+			current_mouse_y_angle += (mouseY - last_mouse_y) * 0.15f;
 			setCursorToCenter();
 		}
 

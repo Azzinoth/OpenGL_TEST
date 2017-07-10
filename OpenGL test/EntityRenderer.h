@@ -3,11 +3,13 @@
 #include "Entity.h"
 #include "StaticShader.h"
 #include "Checker.h"
+#include "BoundingboxShader.h"
 #include <map>
 
 class EntityRenderer {
 
 	StaticShader* shader;
+	BoundingboxShader* boundingboxShader;
 
 	void prepareTexturedModel(TexturedModel& model) {
 		RawModel* rawmodel = model.getRawModel();
@@ -54,9 +56,16 @@ public:
 		shader->start();
 		shader->loadProjectionMatrix(projectionMatrix);
 		shader->stop();
+
+		boundingboxShader = new BoundingboxShader();
+		boundingboxShader->start();
+		boundingboxShader->loadProjectionMatrix(projectionMatrix);
+		boundingboxShader->stop();
 	}
 
-	void render(std::map<TexturedModel*, std::vector<Entity*>>& entities) {
+	void render(std::map<TexturedModel*, std::vector<Entity*>>& entities, Camera* camera) {
+		shader->start();
+
 		std::vector<TexturedModel*> keys;
 		for (auto model : entities)
 		{
@@ -77,32 +86,30 @@ public:
 			prepareTexturedModel(*key);
 			for (auto batch : entities[key]) {
 				prepareInstance(*batch);
-				GL_ERROR(glDrawElements(GL_TRIANGLES, key->getRawModel()->getVertexCount(), GL_UNSIGNED_INT, 0));
+				//GL_ERROR(glDrawElements(GL_TRIANGLES, key->getRawModel()->getVertexCount(), GL_UNSIGNED_INT, 0));
+			}
+			unbindTexturedModel();
+		}
 
-				/*GL_ERROR(glBindVertexArray(batch->getBoundingbox()->getVaoID()));
+		shader->stop();
+		boundingboxShader->start();
+		boundingboxShader->loadViewMatrix(*camera);
+		boundingboxShader->loadColor(glm::vec3(0.0, 1.0, 0.0));
+
+		// bounding boxes
+		for (auto key : keys) {
+			for (auto batch : entities[key]) {
+				boundingboxShader->loadTransformationMatrix(batch->getTransformationMatrix());
+
+				GL_ERROR(glBindVertexArray(batch->getBoundingbox()->getVaoID()));
 				GL_ERROR(glEnableVertexAttribArray(0));
 
 				GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, batch->getBoundingbox()->getVertexCount()));
 
 				GL_ERROR(glDisableVertexAttribArray(0));
-				GL_ERROR(glBindVertexArray(0));*/
+				GL_ERROR(glBindVertexArray(0));
 			}
-			unbindTexturedModel();
 		}
-
-		// bounding boxes
-		//for (auto key : keys) {
-		//	for (auto batch : entities[key]) {
-		//		shader->loadTransformationMatrix(batch->getTransformationMatrix());
-
-		//		GL_ERROR(glBindVertexArray(batch->getBoundingbox()->getVaoID()));
-		//		GL_ERROR(glEnableVertexAttribArray(0));
-
-		//		GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, batch->getBoundingbox()->getVertexCount()));
-
-		//		GL_ERROR(glDisableVertexAttribArray(0));
-		//		GL_ERROR(glBindVertexArray(0));
-		//	}
-		//}
+		boundingboxShader->stop();
 	}
 };

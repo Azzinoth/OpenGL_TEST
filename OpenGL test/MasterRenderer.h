@@ -35,7 +35,7 @@ class MasterRenderer {
 	glm::mat4 projectionMatrix;
 
 	void createProjectionMatrix() {
-		float aspectRatio = 1920.0f / 1080.0f;
+		float aspectRatio = 1904.0f / 1041.0f;
 		float y_scale = (float)((1.0f / tan((FOV / 2.0f) * glm::pi<float>() / 180.0f)) * aspectRatio);
 		float x_scale = y_scale / aspectRatio;
 		float frustum_length = FAR_PLANE - NEAR_PLANE;
@@ -86,7 +86,7 @@ public:
 		camera->move(Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f);
 		shader->loadViewMatrix(*camera);
 
-		renderer->render(entities);
+		renderer->render(entities, camera);
 
 		shader->stop();
 

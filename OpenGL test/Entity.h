@@ -28,48 +28,92 @@ class Entity {
 		float maxY = rawModel->getBoundingboxMax().y;
 		float maxZ = rawModel->getBoundingboxMax().z;
 
+		//std::vector<float> VERTICES = {
+		//	minX, maxY, minZ, // 0
+		//	minX, minY, minZ, // 1
+		//	maxX, minY, minZ, // 2
+		//	maxX, minY, minZ, // 2
+		//	maxX, maxY, minZ, // 3
+		//	minX, maxY, minZ, // 0
+
+		//	minX, minY, maxZ, // 4
+		//	minX, minY, minZ, // 1
+		//	minX, maxY, minZ, // 0
+		//	minX, maxY, minZ, // 0
+		//	minX, maxY, maxZ, // 5
+		//	minX, minY, maxZ, // 4
+
+		//	maxX, minY, minZ, // 2
+		//	maxX, minY, maxZ, // 6
+		//	maxX, maxY, maxZ, // 7
+		//	maxX, maxY, maxZ, // 7
+		//	maxX, maxY, minZ, // 3
+		//	maxX, minY, minZ, // 2
+
+		//	minX, minY, maxZ, // 4
+		//	minX, maxY, maxZ, // 5
+		//	maxX, maxY, maxZ, // 7
+		//	maxX, maxY, maxZ, // 7
+		//	maxX, minY, maxZ,  // 6
+		//	minX, minY, maxZ,  // 4
+
+		//	minX, maxY, minZ,  // 0
+		//	maxX, maxY, minZ,  // 3
+		//	maxX, maxY, maxZ, // 7
+		//	maxX, maxY, maxZ, // 7
+		//	minX, maxY, maxZ,  // 5
+		//	minX, maxY, minZ,  // 0
+
+		//	minX, minY, minZ,  // 1
+		//	minX, minY, maxZ,  // 4
+		//	maxX, minY, minZ,  // 2
+		//	maxX, minY, minZ,  // 2
+		//	minX, minY, maxZ,  // 4
+		//	maxX, minY, maxZ  // 6
+		//};
+
 		std::vector<float> VERTICES = {
+			maxX, maxY, minZ, // 3
+			maxX, minY, minZ, // 2
+			minX, minY, minZ, // 1
+			minX, minY, minZ, // 1
+			minX, maxY, minZ, // 0
+			maxX, maxY, minZ, // 3
+
 			minX, maxY, minZ, // 0
 			minX, minY, minZ, // 1
+			minX, minY, maxZ, // 4
+			minX, minY, maxZ, // 4
+			minX, maxY, maxZ, // 5
+			minX, maxY, minZ, // 0
+
+			maxX, maxY, maxZ, // 7
+			maxX, minY, maxZ, // 6
 			maxX, minY, minZ, // 2
 			maxX, minY, minZ, // 2
 			maxX, maxY, minZ, // 3
-			minX, maxY, minZ, // 0
+			maxX, maxY, maxZ, // 7
 
-			minX, minY, maxZ, // 4
-			minX, minY, minZ, // 1
-			minX, maxY, minZ, // 0
-			minX, maxY, minZ, // 0
 			minX, maxY, maxZ, // 5
 			minX, minY, maxZ, // 4
+			maxX, maxY, maxZ, // 7
+			maxX, maxY, maxZ, // 7
+			minX, minY, maxZ, // 4
+			maxX, minY, maxZ, // 6
+			
+			maxX, maxY, minZ, // 3
+			minX, maxY, minZ, // 0
+			minX, maxY, maxZ, // 5
+			minX, maxY, maxZ, // 5
+			maxX, maxY, maxZ, // 7
+			maxX, maxY, minZ, // 3
 
+			minX, minY, minZ, // 1
 			maxX, minY, minZ, // 2
 			maxX, minY, maxZ, // 6
-			maxX, maxY, maxZ, // 7
-			maxX, maxY, maxZ, // 7
-			maxX, maxY, minZ, // 3
-			maxX, minY, minZ, // 2
-
+			maxX, minY, maxZ, // 6
 			minX, minY, maxZ, // 4
-			minX, maxY, maxZ, // 5
-			maxX, maxY, maxZ, // 7
-			maxX, maxY, maxZ, // 7
-			maxX, minY, maxZ,  // 6
-			minX, minY, maxZ,  // 4
-
-			minX, maxY, minZ,  // 0
-			maxX, maxY, minZ,  // 3
-			maxX, maxY, maxZ, // 7
-			maxX, maxY, maxZ, // 7
-			minX, maxY, maxZ,  // 5
-			minX, maxY, minZ,  // 0
-
-			minX, minY, minZ,  // 1
-			minX, minY, maxZ,  // 4
-			maxX, minY, minZ,  // 2
-			maxX, minY, minZ,  // 2
-			minX, minY, maxZ,  // 4
-			maxX, minY, maxZ  // 6
+			minX, minY, minZ  // 1
 		};
 
 		boundingBox = loader.loadToVAO(VERTICES, 3);

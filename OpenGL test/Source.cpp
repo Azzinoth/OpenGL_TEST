@@ -19,7 +19,8 @@
 
 Loader* loader;
 EntityRenderer* renderer;
-ModelViewCamera* camera;
+//ModelViewCamera* camera;
+FreeCamera* camera;
 Player* player;
 
 #pragma comment (lib, "opengl32.lib")
@@ -471,7 +472,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	TexturedModel* playerTexturedModel = new TexturedModel(playerModel, playerTexture);
 
 	player = new Player(*loader, playerTexturedModel, glm::vec3(153.0f, 5.0f, -274.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
-	camera = new ModelViewCamera(*player);
+	//camera = new ModelViewCamera(*player);
+	camera = new FreeCamera(main_hwnd, glm::vec3(153.0f, 25.0f, -274.0f));
 	//camera = new ModelViewCamera(*rockEntity);
 
 	// ************************ PLAYER ************************
@@ -486,7 +488,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ GUIS ************************
 
-	MousePicker* mousePicker = new MousePicker(*camera, renderer->getProjectionMatrix(), WIN_W, WIN_H, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
+	RECT rc;
+	GetClientRect(main_hwnd, &rc);
+
+	MousePicker* mousePicker = new MousePicker(*camera, renderer->getProjectionMatrix(), rc.right - rc.left/*WIN_W*/, rc.bottom - rc.top/*WIN_H*/, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
 
 	bool inc = true;
 	float RED = 1.0;
@@ -513,8 +518,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				if (light->getPosition().x < -1100) inc = true;
 			}*/
 
-			Time time = Time::getInstance();
-			time.startNewFrame();
+			Time::getInstance().startNewFrame();
+		
 			//float delta = time.getTimePassedFromLastCallMS();
 
 			for (auto terrain : terrains) {
@@ -525,8 +530,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				renderer->processEntity(*tree);
 			}
 
-			lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z - 2.0f));
+			lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z));
 			lights[1]->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y + 14.7f * 1.5f, mousePicker->getCurrentTerrainPoint().z));
+			
 
 			for (auto fern : ferns) {
 				renderer->processEntity(*fern);
@@ -586,9 +592,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 
         EndPaint(hWnd, &ps);
-
-
-        // End application-specific layout section.EndPaint(hWnd, &ps);
         break;
 
 		case WM_KEYDOWN:
@@ -634,13 +637,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_MOUSEMOVE:
 		{
-			int mouseX = GET_X_LPARAM(lParam);
-			int mouseY = GET_Y_LPARAM(lParam);
-			//POINT mouse;
-			//GetCursorPos(&mouse);
+			if (hWnd == GetActiveWindow()) {
+				int mouseX = GET_X_LPARAM(lParam);
+				int mouseY = GET_Y_LPARAM(lParam);
+				//POINT mouse;
+				//GetCursorPos(&mouse);
 
-			camera->setMouseCoordinates(mouseX, mouseY);
-			Input::getInstance().setMouseCoordinates(mouseX, mouseY);
+				RECT rc, screen_wr;
+				GetClientRect(hWnd, &rc);
+				GetWindowRect(hWnd, &screen_wr);
+
+				//int current_mouse_x = screen_wr.left + mouseX + 8;
+				//int current_mouse_y = screen_wr.top + mouseY + 31;
+
+				//camera->setMouseCoordinates(mouse.x, mouse.y);
+
+				//camera->setMouseCoordinates(mouseX, mouseY);
+				//camera->setMouseCoordinates(current_mouse_x, current_mouse_y);
+				Input::getInstance().setMouseCoordinates(mouseX, mouseY);
+			}
 		}
 		break;
 

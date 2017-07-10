@@ -5,13 +5,13 @@
 
 class MousePicker {
 
-	const int RECURSION_COUNT = 300;
-	const float RAY_RANGE = 10000;
+	const int RECURSION_COUNT = 200;
+	const float RAY_RANGE = 5000.0;
 
 	Terrain* terrain = nullptr;
-	glm::vec3 currentTerrainPoint;
+	glm::dvec3 currentTerrainPoint;
 
-	glm::vec3 currentRay;
+	glm::dvec3 currentRay;
 
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
@@ -19,24 +19,24 @@ class MousePicker {
 
 	int windowW, windowH;
 
-	glm::vec3 getPointOnRay(glm::vec3 ray, float distance) {
-		glm::vec3 camPos = camera->getPosition();
-		glm::vec3 start = glm::vec3(camPos.x, camPos.y, camPos.z);
-		glm::vec3 scaledRay = glm::vec3(ray.x * distance, ray.y * distance, ray.z * distance);
+	glm::dvec3 getPointOnRay(glm::dvec3 ray, float distance) {
+		glm::dvec3 camPos = camera->getPosition();
+		glm::dvec3 start = glm::dvec3(camPos.x, camPos.y, camPos.z);
+		glm::dvec3 scaledRay = glm::dvec3(ray.x * distance, ray.y * distance, ray.z * distance);
 
 		return start + scaledRay;
 	}
 
-	glm::vec3 binarySearch(int count, float start, float finish, glm::vec3 ray) {
+	glm::dvec3 binarySearch(int count, float start, float finish, glm::dvec3 ray) {
 		float half = start + ((finish - start) / 2.0f);
 		if (count >= RECURSION_COUNT) {
-			glm::vec3 endPoint = getPointOnRay(ray, half);
+			glm::dvec3 endPoint = getPointOnRay(ray, half);
 			Terrain* terrain = getTerrain(endPoint.x, endPoint.z);
 			if (terrain != nullptr) {
 				return endPoint;
 			}
 			else {
-				return glm::vec3(0.0f);
+				return glm::dvec3(0.0f);
 			}
 		}
 		if (intersectionInRange(start, half, ray)) {
@@ -47,9 +47,9 @@ class MousePicker {
 		}
 	}
 
-	bool intersectionInRange(float start, float finish, glm::vec3 ray) {
-		glm::vec3 startPoint = getPointOnRay(ray, start);
-		glm::vec3 endPoint = getPointOnRay(ray, finish);
+	bool intersectionInRange(float start, float finish, glm::dvec3 ray) {
+		glm::dvec3 startPoint = getPointOnRay(ray, start);
+		glm::dvec3 endPoint = getPointOnRay(ray, finish);
 		if (!isUnderGround(startPoint) && isUnderGround(endPoint)) {
 			return true;
 		}
@@ -58,7 +58,7 @@ class MousePicker {
 		}
 	}
 
-	bool isUnderGround(glm::vec3 testPoint) {
+	bool isUnderGround(glm::dvec3 testPoint) {
 		Terrain* terrain = getTerrain(testPoint.x, testPoint.z);
 		float height = 0;
 		if (terrain != nullptr) {
@@ -87,11 +87,11 @@ public:
 		this->terrain = &terrain;
 	}
 
-	glm::vec3 getCurrentTerrainPoint() {
+	glm::dvec3 getCurrentTerrainPoint() {
 		return currentTerrainPoint;
 	}
 
-	glm::vec3 getCurrentRay() {
+	glm::dvec3 getCurrentRay() {
 		return currentRay;
 	}
 
@@ -107,35 +107,35 @@ public:
 		}
 	}
 
-	glm::vec2 getNormalizedDeviceCoords(float mouseX, float mouseY) {
+	glm::dvec2 getNormalizedDeviceCoords(float mouseX, float mouseY) {
 		float x = (2.0f * mouseX) / windowW - 1;
 		float y = (2.0f * mouseY) / windowH - 1;
 
-		return glm::vec2(x, -y);
+		return glm::dvec2(x, -y);
 	}
 
-	glm::vec4 toEyeCoords(glm::vec4 clipCoords) {
-		glm::mat4 invertedProjection = glm::inverse(projectionMatrix);
-		glm::vec4 eyeCoords = clipCoords * invertedProjection;
+	glm::dvec4 toEyeCoords(glm::dvec4 clipCoords) {
+		glm::dmat4 invertedProjection = glm::inverse(projectionMatrix);
+		glm::dvec4 eyeCoords =  invertedProjection * clipCoords;
 
-		return glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+		return glm::dvec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
 	}
 
-	glm::vec3 toWorldCoords(glm::vec4 eyeCoords) {
-		glm::mat4 invertedView = glm::inverse(viewMatrix);
-		glm::vec4 rayWorld = eyeCoords * invertedView;
+	glm::dvec3 toWorldCoords(glm::dvec4 eyeCoords) {
+		glm::dmat4 invertedView = glm::inverse(viewMatrix);
+		glm::dvec4 rayWorld = invertedView * eyeCoords;
 
-		return glm::normalize(glm::vec3(rayWorld.x, rayWorld.y, rayWorld.z));
+		return glm::normalize(glm::dvec3(rayWorld.x, rayWorld.y, rayWorld.z));
 	}
 
-	glm::vec3 calculateMouseRay() {
+	glm::dvec3 calculateMouseRay() {
 		float mouseX = Input::getInstance().getMouseX();
 		float mouseY = Input::getInstance().getMouseY();
 		
-		glm::vec2 normalizedCoords = getNormalizedDeviceCoords(mouseX, mouseY);
-		glm::vec4 clipCoords = glm::vec4(normalizedCoords.x, normalizedCoords.y, -1.0, 1.0);
-		glm::vec4 eyeCoords = toEyeCoords(clipCoords);
-		glm::vec3 worldRay = toWorldCoords(eyeCoords);
+		glm::dvec2 normalizedCoords = getNormalizedDeviceCoords(mouseX, mouseY);
+		glm::dvec4 clipCoords = glm::dvec4(normalizedCoords.x, normalizedCoords.y, -1.0, 1.0);
+		glm::dvec4 eyeCoords = toEyeCoords(clipCoords);
+		glm::dvec3 worldRay = toWorldCoords(eyeCoords);
 
 		return worldRay;
 	}
