@@ -16,9 +16,16 @@
 #include "ModelViewCamera.h"
 #include "GuiRenderer.h"
 #include "MousePicker.h"
+#include "WaterRenderer.h"
+#include "WaterFrameBuffers.h"
 
 Loader* loader;
 EntityRenderer* renderer;
+
+WaterShader* waterShader;
+WaterRenderer* waterRenderer;
+WaterFrameBuffers* waterFrameBuffers;
+
 //ModelViewCamera* camera;
 FreeCamera* camera;
 Player* player;
@@ -478,12 +485,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ PLAYER ************************
 
+	// ************************ WATER ************************
+
+	waterShader = new WaterShader();
+	waterRenderer = new WaterRenderer(*loader, *waterShader, renderer->getProjectionMatrix());
+	std::vector<WaterTile*> waters;
+	waters.push_back(new WaterTile(153.0f, -274.0f, 20.0f));
+
+	waterFrameBuffers = new WaterFrameBuffers();
+
+
+	// ************************ WATER ************************
+
 	// ************************ GUIS ************************
 
 	std::vector<GuiTexture*> guis;
 	// pivot is at 0.5f, 0.5f !
-	guis.push_back(new GuiTexture(loader->loadTexture(RES_FOLDER "healthGui.png"), glm::vec2 (-0.75f, 0.9f), glm::vec2(0.25f, 0.25f)));
-	
+	//guis.push_back(new GuiTexture(loader->loadTexture(RES_FOLDER "healthGui.png"), glm::vec2(-0.75f, 0.9f), glm::vec2(0.25f, 0.25f)));
+	guis.push_back(new GuiTexture(waterFrameBuffers->getRefractionTexture(), glm::vec2(0.5f, 0.5f), glm::vec2(0.25f, 0.25f)));
+	guis.push_back(new GuiTexture(waterFrameBuffers->getReflectionTexture(), glm::vec2(-0.5f, 0.5f), glm::vec2(0.25f, 0.25f)));
+
 	GuiRenderer* guiRenderer = new GuiRenderer(*loader);
 
 	// ************************ GUIS ************************
@@ -491,10 +512,47 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RECT rc;
 	GetClientRect(main_hwnd, &rc);
 
-	MousePicker* mousePicker = new MousePicker(*camera, renderer->getProjectionMatrix(), rc.right - rc.left/*WIN_W*/, rc.bottom - rc.top/*WIN_H*/, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
+	MousePicker* mousePicker = new MousePicker(*camera, renderer->getProjectionMatrix(), rc.right - rc.left, rc.bottom - rc.top, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
 
-	bool inc = true;
-	float RED = 1.0;
+	auto compactRenderer = [&](glm::vec4 clipPlane) {
+		//Sleep(5);
+		//mousePicker->update();
+		//Time::getInstance().startNewFrame();
+
+		for (auto terrain : terrains) {
+			renderer->processTerrain(*terrain);
+		}
+
+		for (auto tree : trees) {
+			renderer->processEntity(*tree);
+		}
+
+		lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z));
+		lights[1]->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y + 14.7f * 1.5f, mousePicker->getCurrentTerrainPoint().z));
+
+		for (auto fern : ferns) {
+			renderer->processEntity(*fern);
+		}
+
+		for (auto grass : grasses) {
+			renderer->processEntity(*grass);
+		}
+
+		for (auto flower : flowers) {
+			renderer->processEntity(*flower);
+		}
+
+		renderer->processEntity(*rockEntity);
+
+		renderer->processEntity(*lampEntity);
+		renderer->processEntity(*lampEntity1);
+		renderer->processEntity(*lampEntity2);
+
+		renderer->processEntity(*player);
+
+		renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f), clipPlane);
+	};
+
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
@@ -504,61 +562,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         else
         {
-			Sleep(10);
-
-			mousePicker->update();
-
-			/*if (inc) {
-				light->setPosition(glm::vec3(light->getPosition().x + 3, light->getPosition().y, light->getPosition().z));
-				if (light->getPosition().x > 1100) inc = false;
-			}
-
-			if (!inc) {
-				light->setPosition(glm::vec3(light->getPosition().x - 3, light->getPosition().y, light->getPosition().z));
-				if (light->getPosition().x < -1100) inc = true;
-			}*/
-
 			Time::getInstance().startNewFrame();
-		
-			//float delta = time.getTimePassedFromLastCallMS();
-
-			for (auto terrain : terrains) {
-				renderer->processTerrain(*terrain);
-			}
-
-			for (auto tree : trees) {
-				renderer->processEntity(*tree);
-			}
-
-			lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z));
-			lights[1]->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y + 14.7f * 1.5f, mousePicker->getCurrentTerrainPoint().z));
-			
-
-			for (auto fern : ferns) {
-				renderer->processEntity(*fern);
-			}
-
-			for (auto grass : grasses) {
-				renderer->processEntity(*grass);
-			}
-
-			for (auto flower : flowers) {
-				renderer->processEntity(*flower);
-			}
-
-			//renderer->processEntity(*leavesEntity);
-			//renderer->processEntity(*bogMyrtleEntity);
-			renderer->processEntity(*rockEntity);
-			
-
-			renderer->processEntity(*lampEntity);
-			renderer->processEntity(*lampEntity1);
-			renderer->processEntity(*lampEntity2);
-
+			mousePicker->update();
+			camera->move(Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f);
 			player->move(*terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
-			renderer->processEntity(*player);
-			
-			renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f));
+
+			GL_ERROR(glEnable(GL_CLIP_DISTANCE0));
+
+			float distance = (camera->getPosition().y - waters[0]->getHeight()) * 2.0f;
+			camera->setPitch(-camera->getPitch());
+			camera->setPosition(glm::vec3(camera->getPosition().x, camera->getPosition().y - distance, camera->getPosition().z));
+
+			waterFrameBuffers->bindReflectionFrameBuffer();
+			compactRenderer(glm::vec4(0.0, 1.0, 0.0, -waters[0]->getHeight()));
+
+			camera->setPitch(-camera->getPitch());
+			camera->setPosition(glm::vec3(camera->getPosition().x, camera->getPosition().y + distance, camera->getPosition().z));
+
+			waterFrameBuffers->bindRefractionFrameBuffer();
+			compactRenderer(glm::vec4(0.0, -1.0, 0.0, waters[0]->getHeight()));
+
+
+			waterFrameBuffers->unbindCurrentFrameBuffer();
+			compactRenderer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+			waterRenderer->render(waters, *camera);
 			guiRenderer->render(guis);
 
             SwapBuffers(g_hDC);
@@ -567,6 +594,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	delete guiRenderer;
 	delete renderer;
+	delete waterRenderer;
+	delete waterFrameBuffers;
 
     return (int)msg.wParam;
 }

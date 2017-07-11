@@ -95,6 +95,10 @@ public:
 		GL_ERROR(glUniform3f(location, vector.x, vector.y, vector.z));
 	}
 
+	void loadVector(GLuint& location, glm::vec4& vector) {
+		GL_ERROR(glUniform4f(location, vector.x, vector.y, vector.z, vector.w));
+	}
+
 	void load2DVector(GLuint& location, glm::vec2& vector) {
 		GL_ERROR(glUniform2f(location, vector.x, vector.y));
 	}

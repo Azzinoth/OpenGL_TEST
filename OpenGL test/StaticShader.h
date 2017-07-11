@@ -29,8 +29,12 @@ uniform vec2 offset;
 const float density = 0.007;
 const float gradient = 1.5;
 
+uniform vec4 plane;
+
 void main(void) {
 	vec4 worldPosition = transformationMatrix * vec4(position, 1.0);
+
+	gl_ClipDistance[0] = dot(worldPosition, plane);
 
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projectionMatrix * positionRelativeToCam;
@@ -130,6 +134,7 @@ class StaticShader : public ShaderProgram {
 	GLuint location_skyColour;
 	GLuint location_numberOfRows;
 	GLuint location_offset;
+	GLuint location_plane;
 	
 public:
 
@@ -183,6 +188,7 @@ public:
 		location_skyColour = getUniformLocation("skyColour");
 		location_numberOfRows = getUniformLocation("numberOfRows");
 		location_offset = getUniformLocation("offset");
+		location_plane = getUniformLocation("plane");
 	}
 
 	void loadTransformationMatrix(glm::mat4& matrix) {
@@ -231,6 +237,10 @@ public:
 
 	void loadOffset(float x, float y) {
 		load2DVector(location_offset, glm::vec2(x, y));
+	}
+
+	void loadclipPlane(glm::vec4 plane) {
+		loadVector(location_plane, plane);
 	}
 
 	~StaticShader() {

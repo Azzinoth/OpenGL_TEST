@@ -76,14 +76,13 @@ public:
 		GL_ERROR(glDisable(GL_CULL_FACE));
 	}
 
-	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour) {
+	void render(std::vector<Light*>& lights, Camera* camera, glm::vec3 skyColour, glm::vec4 clipPlane) {
 		this->skyColour = skyColour;
 		prepare();
 		shader->start();
+		shader->loadclipPlane(clipPlane);
 		shader->loadSkyColour(skyColour);
 		shader->loadLights(lights);
-
-		camera->move(Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f);
 		shader->loadViewMatrix(*camera);
 
 		renderer->render(entities, camera);
@@ -91,6 +90,7 @@ public:
 		shader->stop();
 
 		terrainShader->start();
+		terrainShader->loadclipPlane(clipPlane);
 		terrainShader->loadSkyColour(skyColour);
 		terrainShader->loadLights(lights);
 		terrainShader->loadViewMatrix(*camera);

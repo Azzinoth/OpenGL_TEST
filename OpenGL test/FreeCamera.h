@@ -24,6 +24,9 @@ public:
 	}
 
 	virtual void move(float deltaTime) final {
+
+		//viewMatrix = createViewMatrix(*this);
+
 		if (currentKey == 1) {
 			glm::vec4 forward = { 0.0f, 0.0f, -1.0f, 0.0f };
 			forward = forward * viewMatrix;

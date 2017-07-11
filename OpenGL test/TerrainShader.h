@@ -24,8 +24,12 @@ uniform vec3 lightPosition[4];
 const float density = 0.007;
 const float gradient = 1.5;
 
+uniform vec4 plane;
+
 void main(void) {
 	vec4 worldPosition = transformationMatrix * vec4(position, 1.0);
+
+	gl_ClipDistance[0] = dot(worldPosition, plane);
 
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projectionMatrix * positionRelativeToCam;
@@ -127,6 +131,7 @@ class TerrainShader : public ShaderProgram {
 	GLuint location_gTexture;
 	GLuint location_bTexture;
 	GLuint location_blendMap;
+	GLuint location_plane;
 
 public:
 
@@ -181,6 +186,7 @@ public:
 		location_gTexture = getUniformLocation("gTexture");
 		location_bTexture = getUniformLocation("bTexture");
 		location_blendMap = getUniformLocation("blendMap");
+		location_plane = getUniformLocation("plane");
 	}
 
 	void loadTransformationMatrix(glm::mat4& matrix) {
@@ -225,6 +231,10 @@ public:
 		loadInt(location_gTexture, GLint(2));
 		loadInt(location_bTexture, GLint(3));
 		loadInt(location_blendMap, GLint(4));
+	}
+
+	void loadclipPlane(glm::vec4 plane) {
+		loadVector(location_plane, plane);
 	}
 
 	~TerrainShader() {
