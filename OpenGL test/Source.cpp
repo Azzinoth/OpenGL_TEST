@@ -487,13 +487,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ WATER ************************
 
+	waterFrameBuffers = new WaterFrameBuffers();
 	waterShader = new WaterShader();
-	waterRenderer = new WaterRenderer(*loader, *waterShader, renderer->getProjectionMatrix());
+	waterRenderer = new WaterRenderer(*loader, *waterShader, renderer->getProjectionMatrix(), *waterFrameBuffers, RES_FOLDER "waterDUDV.png", RES_FOLDER "normalMap.png");
 	std::vector<WaterTile*> waters;
 	waters.push_back(new WaterTile(153.0f, -274.0f, 20.0f));
-
-	waterFrameBuffers = new WaterFrameBuffers();
-
 
 	// ************************ WATER ************************
 
@@ -502,8 +500,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	std::vector<GuiTexture*> guis;
 	// pivot is at 0.5f, 0.5f !
 	//guis.push_back(new GuiTexture(loader->loadTexture(RES_FOLDER "healthGui.png"), glm::vec2(-0.75f, 0.9f), glm::vec2(0.25f, 0.25f)));
-	guis.push_back(new GuiTexture(waterFrameBuffers->getRefractionTexture(), glm::vec2(0.5f, 0.5f), glm::vec2(0.25f, 0.25f)));
-	guis.push_back(new GuiTexture(waterFrameBuffers->getReflectionTexture(), glm::vec2(-0.5f, 0.5f), glm::vec2(0.25f, 0.25f)));
+	//guis.push_back(new GuiTexture(waterFrameBuffers->getRefractionTexture(), glm::vec2(0.5f, 0.5f), glm::vec2(0.25f, 0.25f)));
+	//guis.push_back(new GuiTexture(waterFrameBuffers->getReflectionTexture(), glm::vec2(-0.5f, 0.5f), glm::vec2(0.25f, 0.25f)));
 
 	GuiRenderer* guiRenderer = new GuiRenderer(*loader);
 
@@ -527,8 +525,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			renderer->processEntity(*tree);
 		}
 
-		lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z));
-		lights[1]->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y + 14.7f * 1.5f, mousePicker->getCurrentTerrainPoint().z));
+		//lampEntity->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y, mousePicker->getCurrentTerrainPoint().z));
+		//lights[1]->setPosition(glm::vec3(mousePicker->getCurrentTerrainPoint().x, mousePicker->getCurrentTerrainPoint().y + 14.7f * 1.5f, mousePicker->getCurrentTerrainPoint().z));
 
 		for (auto fern : ferns) {
 			renderer->processEntity(*fern);
@@ -582,10 +580,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			waterFrameBuffers->bindRefractionFrameBuffer();
 			compactRenderer(glm::vec4(0.0, -1.0, 0.0, waters[0]->getHeight()));
 
-
 			waterFrameBuffers->unbindCurrentFrameBuffer();
 			compactRenderer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-			waterRenderer->render(waters, *camera);
+			waterRenderer->render(waters, *camera, lights[0]);
 			guiRenderer->render(guis);
 
             SwapBuffers(g_hDC);
