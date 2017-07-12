@@ -9,6 +9,7 @@ struct OBJObject {
 	std::vector<float> verticesArray;
 	std::vector<float> texturesArray;
 	std::vector<float> normalsArray;
+	std::vector<float> tangentsArray;
 	std::vector<int> indicesArray;
 
 	std::string name;
@@ -62,6 +63,40 @@ class Loader {
 		}
 	}
 
+	glm::vec3 calculateTangents(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2,
+		std::vector<glm::vec2>&& textures) {
+		/*glm::vec3 delatPos1 = v1 - v0;
+		glm::vec3 delatPos2 = v2 - v0;
+		glm::vec2 uv0 = textures[0];
+		glm::vec2 uv1 = textures[1];
+		glm::vec2 uv2 = textures[2];
+		glm::vec2 deltaUv1 = uv1 - uv0;
+		glm::vec2 deltaUv2 = uv2 - uv0;
+
+		float r = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv1.y * deltaUv2.x);
+		delatPos1 = delatPos1 * deltaUv2.y;
+		delatPos2 = delatPos2 * deltaUv1.y;
+		glm::vec3 tangent = delatPos1 - delatPos2;
+		tangent = tangent * r;
+
+		if (tangent.x == -NAN) {
+			assert(0);
+		}*/
+
+		glm::vec3 q1 = v1 - v0;
+		glm::vec3 q2 = v2 - v0;
+		glm::vec2 uv0 = textures[0];
+		glm::vec2 uv1 = textures[1];
+		glm::vec2 uv2 = textures[2];
+
+		float t1 = uv1.y - uv0.y;
+		float t2 = uv2.y - uv0.y;
+
+		glm::vec3 tangent = t2*q1 - t1*q2;
+
+		return tangent;
+	}
+
 public:
 
 	RawModel* loadToVAO(std::vector<float>& positions, std::vector<float>& textureCoords,
@@ -76,6 +111,19 @@ public:
 		return new RawModel(vaoID, indices.size());
 	}
 
+	RawModel* loadToVAO(std::vector<float>& positions, std::vector<float>& textureCoords,
+		std::vector<float>& normals, std::vector<float>& tangents, std::vector<int>& indices) {
+		GLuint vaoID = createVAO();
+		bindIndicesBuffer(indices);
+		storeDataInAttributeList(0, 3, positions);
+		storeDataInAttributeList(1, 2, textureCoords);
+		storeDataInAttributeList(2, 3, normals);
+		storeDataInAttributeList(3, 3, tangents);
+		unbindVAO();
+
+		return new RawModel(vaoID, indices.size());
+	}
+
 	RawModel* loadToVAO(std::vector<float>& positions, int dimensions = 2) {
 		GLuint vaoID = createVAO();
 		storeDataInAttributeList(0, dimensions, positions);
@@ -87,15 +135,23 @@ public:
 	RawModel* loadToVAO(std::string& requiredModel) {
 		if (requiredModel == std::string("plane")) {
 			std::vector<float> positions = { -0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f };
-			std::vector<int> indices = { 0, 1, 3, 3, 1, 2 };
+			std::vector<int> indices = { 0, 1, 2, 3, 0, 2 };
 			std::vector<float> textureCoords = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
-			std::vector<float> normals = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
+			std::vector<float> normals = { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f };
+
+
+			glm::vec3 tangent0 = calculateTangents(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.5f, -0.5f, 0.0f), { glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f) });
+			glm::vec3 tangent1 = calculateTangents(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(0.5f, -0.5f, 0.0f), { glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f) });
+
+
+			std::vector<float> tangents = { tangent0.x, tangent0.y, tangent0.z, tangent0.x, tangent0.y, tangent0.z, tangent0.x, tangent0.y, tangent0.z, tangent1.x, tangent1.y, tangent1.z };
 
 			GLuint vaoID = createVAO();
 			bindIndicesBuffer(indices);
 			storeDataInAttributeList(0, 3, positions);
 			storeDataInAttributeList(1, 2, textureCoords);
 			storeDataInAttributeList(2, 3, normals);
+			storeDataInAttributeList(3, 3, tangents);
 			unbindVAO();
 
 			return new RawModel(vaoID, indices.size());
@@ -148,11 +204,12 @@ public:
 		glm::vec3 maxVertex = glm::vec3(0.0);
 
 		std::vector<std::string> data;
+		objects.push_back(new OBJObject());
 
 		while (!feof(myFile)) {
 			char buff[100];
 			fgets(buff, 100, myFile);
-			
+
 			if  (buff[0] == 'o' && buff[1] == ' ') {
 				if (objects.size() >= 1) {
 					vertices.clear();
@@ -161,7 +218,7 @@ public:
 					indices.clear();
 				}
 
-				objects.push_back(new OBJObject());
+				//objects.push_back(new OBJObject());
 
 				objects.back()->name = buff;
 				objects.back()->name.erase(objects.back()->name.begin(), objects.back()->name.begin() + 2);
@@ -190,15 +247,6 @@ public:
 				if (maxVertex.x < currentVertex.x) maxVertex.x = currentVertex.x;
 				if (maxVertex.y < currentVertex.y) maxVertex.y = currentVertex.y;
 				if (maxVertex.z < currentVertex.z) maxVertex.z = currentVertex.z;
-
-				/*if (vertices.size() == 3) {
-					minVertex = currentVertex;
-					maxVertex = currentVertex;
-				} else if ((minVertex.x + minVertex.y + minVertex.z) > (currentVertex.x + currentVertex.y + currentVertex.z)) {
-					minVertex = currentVertex;
-				} else if ((maxVertex.x + maxVertex.y + maxVertex.z) < (currentVertex.x + currentVertex.y + currentVertex.z)) {
-					maxVertex = currentVertex;
-				}*/
 
 				delete[] line;
 			}
@@ -231,6 +279,7 @@ public:
 					objects.back()->verticesArray.resize(vertices.size() * 3);
 					objects.back()->texturesArray.resize(vertices.size() * 2);
 					objects.back()->normalsArray.resize(vertices.size() * 3);
+					objects.back()->tangentsArray.resize(vertices.size() * 3);
 					
 					int index = 0;
 
@@ -267,6 +316,10 @@ public:
 					if (vertexDisplacementCounter < std::stof(vertexData[0])) vertexDisplacementCounter = std::stof(vertexData[0]);
 					if (textureDisplacementCounter < std::stof(vertexData[1])) textureDisplacementCounter = std::stof(vertexData[1]);
 					if (normalDisplacementCounter < std::stof(vertexData[2])) normalDisplacementCounter = std::stof(vertexData[2]);
+
+					//if (objects.back()->indicesArray.size() % 3 == 0) {
+						//
+					//}
 				};
 
 				std::vector<std::string> vertex1;
@@ -285,6 +338,33 @@ public:
 
 		fclose(myFile);
 
+		// calculateTangents
+		for (int i = 0; i < objects.back()->indicesArray.size() - 1; i += 3) {
+			glm::vec3 v0 = { objects.back()->verticesArray[objects.back()->indicesArray[i] * 3], objects.back()->verticesArray[objects.back()->indicesArray[i] * 3 + 1], objects.back()->verticesArray[objects.back()->indicesArray[i] * 3 + 2] };
+			glm::vec3 v1 = { objects.back()->verticesArray[objects.back()->indicesArray[i + 1] * 3], objects.back()->verticesArray[objects.back()->indicesArray[i + 1] * 3 + 1], objects.back()->verticesArray[objects.back()->indicesArray[i + 1] * 3 + 2] };
+			glm::vec3 v2 = { objects.back()->verticesArray[objects.back()->indicesArray[i + 2] * 3], objects.back()->verticesArray[objects.back()->indicesArray[i + 2] * 3 + 1], objects.back()->verticesArray[objects.back()->indicesArray[i + 2] * 3 + 2] };
+
+			glm::vec2 t0 = { objects.back()->texturesArray[objects.back()->indicesArray[i] * 2], objects.back()->texturesArray[objects.back()->indicesArray[i] * 2 + 1] };
+			glm::vec2 t1 = { objects.back()->texturesArray[objects.back()->indicesArray[i + 1] * 2], objects.back()->texturesArray[objects.back()->indicesArray[i + 1] * 2 + 1] };
+			glm::vec2 t2 = { objects.back()->texturesArray[objects.back()->indicesArray[i + 2] * 2], objects.back()->texturesArray[objects.back()->indicesArray[i + 2] * 2 + 1] };
+
+			glm::vec3 tangent = calculateTangents(v0, v1, v2, { t0, t1, t2 });
+			tangent = glm::normalize(tangent);
+
+			objects.back()->tangentsArray[objects.back()->indicesArray[i] * 3] = tangent.x;
+			objects.back()->tangentsArray[objects.back()->indicesArray[i] * 3 + 1] = tangent.y;
+			objects.back()->tangentsArray[objects.back()->indicesArray[i] * 3 + 2] = tangent.z;
+
+			objects.back()->tangentsArray[objects.back()->indicesArray[i + 1] * 3] = tangent.x;
+			objects.back()->tangentsArray[objects.back()->indicesArray[i + 1] * 3 + 1] = tangent.y;
+			objects.back()->tangentsArray[objects.back()->indicesArray[i + 1] * 3 + 2] = tangent.z;
+
+			objects.back()->tangentsArray[objects.back()->indicesArray[i + 2] * 3] = tangent.x;
+			objects.back()->tangentsArray[objects.back()->indicesArray[i + 2] * 3 + 1] = tangent.y;
+			objects.back()->tangentsArray[objects.back()->indicesArray[i + 2] * 3 + 2] = tangent.z;
+		}
+
+		
 		// Models with sub meshes
 		//
 		//
@@ -297,7 +377,8 @@ public:
 		//
 		//
 
-		RawModel* model = loadToVAO(objects.front()->verticesArray, objects.front()->texturesArray, objects.front()->normalsArray, objects.front()->indicesArray);
+		//RawModel* model = loadToVAO(objects.front()->verticesArray, objects.front()->texturesArray, objects.front()->normalsArray, objects.front()->indicesArray);
+		RawModel* model = loadToVAO(objects.front()->verticesArray, objects.front()->texturesArray, objects.front()->normalsArray, objects.front()->tangentsArray, objects.front()->indicesArray);
 		model->setBoundingboxMin(minVertex);
 		model->setBoundingboxMax(maxVertex);
 

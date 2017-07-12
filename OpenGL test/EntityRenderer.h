@@ -20,8 +20,7 @@ class EntityRenderer {
 		GL_ERROR(glEnableVertexAttribArray(2));
 
 		ModelTexture* texture = model.getTexture();
-		int x = texture->getNumberOfRows();
-		shader->loadNumberOfRows(x);
+		shader->loadNumberOfRows(texture->getNumberOfRows());
 		if (texture->getHasTransparency()) {
 			GL_ERROR(glDisable(GL_CULL_FACE));
 		}

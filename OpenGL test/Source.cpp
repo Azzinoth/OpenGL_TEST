@@ -425,10 +425,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const float firstLightZ = -350.0f;
 
 	std::vector<Light*> lights;
-	lights.push_back(new Light(glm::vec3(0.0f, 10000.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
+	lights.push_back(new Light(glm::vec3(0.0f, 100.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
 	lights.push_back(new Light(glm::vec3(firstLightX, getTerrainY(firstLightX, firstLightZ, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, firstLightZ), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
-	lights.push_back(new Light(glm::vec3(370.0f, getTerrainY(370.0f, -300.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -300.0f), glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
-	lights.push_back(new Light(glm::vec3(280.0f, getTerrainY(280.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -405.0f), glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
+	//lights.push_back(new Light(glm::vec3(370.0f, getTerrainY(370.0f, -300.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -300.0f), glm::vec3(2.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
+	//lights.push_back(new Light(glm::vec3(280.0f, getTerrainY(280.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD) + 14.7f * 1.5f, -405.0f), glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(1.0f, 0.0009f, 0.0005f)));
 
 	RawModel* lamp = loader->loadFromOBJ(RES_FOLDER "lamp.obj");
 	ModelTexture* lampTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "lamp.png"));
@@ -441,10 +441,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	// ************************ LIGHTS ************************
 
-	/*RawModel* plane = loader->loadToVAO(std::string("plane"));
-	ModelTexture* texture1 = new ModelTexture(loader->loadTexture("C:/Users/Кондрат/Downloads/OpenGL test/OpenGL test/dragon.png"));
+	RawModel* plane = loader->loadToVAO(std::string("plane"));
+	ModelTexture* texture1 = new ModelTexture(loader->loadTexture(RES_FOLDER "brickwall.png"));
+	texture1->setNormalMaptextureID(loader->loadTexture(RES_FOLDER "brickwall_normal.png"));
+	//texture1->setShineDamper(10);
+	//texture1->setReflectivity(1);
+
 	TexturedModel* texturedPlane = new TexturedModel(plane, texture1);
-	Entity* planeEntity = new Entity(texturedPlane, glm::vec3(0.0f, -11.5f, 0.0f), glm::vec3(0.0f, 90.0f, 0.0f), 10.0f);*/
+	Entity* planeEntity = new Entity(*loader, texturedPlane, glm::vec3(193.0f, 60.0f, -350.0f), glm::vec3(0.0f, 0.0f, 0.0f), 10.0f); // SIZE don't correct influense on light ?
 
 	/*RawModel* leaves = loader->loadFromOBJ(RES_FOLDER "untitled.obj");
 	ModelTexture* leavesTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "DeadLeavesAtlas.png"));
@@ -463,8 +467,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	RawModel* rock = loader->loadFromOBJ(RES_FOLDER "rock2.obj");
 	ModelTexture* rockTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "rock.png"));
+	rockTexture->setNormalMaptextureID(loader->loadTexture(RES_FOLDER "RockN.png"));
+
 	TexturedModel* texturedRock = new TexturedModel(rock, rockTexture);
-	Entity* rockEntity = new Entity(*loader, texturedRock, glm::vec3(250.0f, getTerrainY(220.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.05f);
+	Entity* rockEntity = new Entity(*loader, texturedRock, glm::vec3(250.0f, getTerrainY(220.0f, -405.0f, terrains, HALF_SIZE_OF_WORLD), -405.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.06f);
 
 	MasterRenderer* renderer = new MasterRenderer(glm::vec3(101.0f / 255.0f, 150.0f / 255.0f, 206.0f / 255.0f), *loader,
 												  { RES_FOLDER "skyBox/right.png", RES_FOLDER "skyBox/left.png", RES_FOLDER "skyBox/top.png", RES_FOLDER "skyBox/bottom.png", RES_FOLDER "skyBox/back.png", RES_FOLDER "skyBox/front.png" },
@@ -507,6 +513,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ GUIS ************************
 
+	// ************************ BARREL ************************
+	RawModel* barrelModel = loader->loadFromOBJ(RES_FOLDER "barrel/barrel.obj");
+	ModelTexture* barrelTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "barrel/barrel.png"));
+	barrelTexture->setShineDamper(10);
+	barrelTexture->setReflectivity(0);
+	barrelTexture->setNormalMaptextureID(loader->loadTexture(RES_FOLDER "barrel/barrelNormal.png"));
+
+	TexturedModel* barrelTexturedModel = new TexturedModel(barrelModel, barrelTexture);
+
+	Entity* barrel = new Entity(*loader, barrelTexturedModel, glm::vec3(153.0f, 50.0f, -274.0f), glm::vec3(0.0f, 0.0f, 0.0f), 2.0f);
+	
+	// ************************ BARREL ************************
+
+	// ************************ CUTTREE ************************
+	RawModel* cutTreeModel = loader->loadFromOBJ(RES_FOLDER "cutTree/cutTree.obj");
+	ModelTexture* cutTreeTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "cutTree/D_Tree_Stump_01_D_R.png"));
+	cutTreeTexture->setShineDamper(10);
+	cutTreeTexture->setReflectivity(0);
+	cutTreeTexture->setNormalMaptextureID(loader->loadTexture(RES_FOLDER "cutTree/D_Tree_Stump_01_N.png"));
+
+	TexturedModel* cutTreeTexturedModel = new TexturedModel(cutTreeModel, cutTreeTexture);
+
+	Entity* cutTree = new Entity(*loader, cutTreeTexturedModel, glm::vec3(153.0f, 30.0f, -300.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.1f);
+
+	// ************************ CUTTREE ************************
+
 	RECT rc;
 	GetClientRect(main_hwnd, &rc);
 
@@ -539,14 +571,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		for (auto flower : flowers) {
 			renderer->processEntity(*flower);
 		}
+	    
+		//renderer->processEntity(*planeEntity);
+		renderer->processNormalMapEntity(*planeEntity);
 
-		renderer->processEntity(*rockEntity);
+		//renderer->processEntity(*rockEntity);
+		renderer->processNormalMapEntity(*rockEntity);
+
+		renderer->processEntity(*cutTree);
+		//renderer->processNormalMapEntity(*cutTree);
 
 		renderer->processEntity(*lampEntity);
 		renderer->processEntity(*lampEntity1);
 		renderer->processEntity(*lampEntity2);
 
 		renderer->processEntity(*player);
+
+		renderer->processNormalMapEntity(*barrel);
 
 		renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f), clipPlane);
 	};

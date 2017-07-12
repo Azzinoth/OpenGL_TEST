@@ -5,6 +5,8 @@
 
 class ModelTexture {
 	GLuint textureID;
+	GLuint NormalMaptextureID;
+
 	float shineDamper = 1;
 	float reflectivity = 0;
 
@@ -60,5 +62,13 @@ public:
 
 	void setNumberOfRows(int numberOfRows) {
 		this->numberOfRows = numberOfRows;
+	}
+
+	GLuint getNormalMaptextureID() {
+		return NormalMaptextureID;
+	}
+
+	void setNormalMaptextureID(GLuint NormalMaptextureID) {
+		this->NormalMaptextureID = NormalMaptextureID;
 	}
 };

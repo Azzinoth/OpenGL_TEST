@@ -4,6 +4,7 @@
 #include "TerrainRenderer.h"
 #include "SkyboxRenderer.h"
 #include "Time.h"
+#include "NormalMappingRenderer.h"
 class Time;
 
 #include "Input.h"
@@ -18,6 +19,7 @@ class MasterRenderer {
 
 	StaticShader* shader;
 	EntityRenderer* renderer;
+	NormalMappingRenderer* normalMapRenderer;
 
 	TerrainRenderer* terrainRenderer;
 	TerrainShader* terrainShader;
@@ -25,6 +27,7 @@ class MasterRenderer {
 	SkyboxRenderer* skyboxRenderer;
 
 	std::map<TexturedModel*, std::vector<Entity*>> entities;
+	std::map<TexturedModel*, std::vector<Entity*>> normalMapEntities;
 	std::vector<Terrain*> terrains;
 
 	const float FOV = 70.0f;
@@ -65,6 +68,8 @@ public:
 		terrainRenderer = new TerrainRenderer(*terrainShader, projectionMatrix);
 
 		skyboxRenderer = new SkyboxRenderer(loader, projectionMatrix, skyboxTextureFiles, secondSkyboxTextureFiles);
+
+		normalMapRenderer = new NormalMappingRenderer(projectionMatrix);
 	}
 
 	void enableCulling() {
@@ -89,6 +94,9 @@ public:
 
 		shader->stop();
 
+		normalMapRenderer->render(normalMapEntities, clipPlane, lights, *camera);
+
+
 		terrainShader->start();
 		terrainShader->loadclipPlane(clipPlane);
 		terrainShader->loadSkyColour(skyColour);
@@ -102,6 +110,7 @@ public:
 
 		terrains.clear();
 		entities.clear();
+		normalMapEntities.clear();
 	}
 
 	void processTerrain(Terrain& terrain) {
@@ -121,11 +130,26 @@ public:
 		}
 	}
 
+	void processNormalMapEntity(Entity& entity) {
+		TexturedModel* entityModel = entity.getModel();
+
+		auto batch = normalMapEntities.find(entityModel);
+		if (batch == normalMapEntities.end()) {
+			std::vector<Entity*> newBatch;
+			newBatch.push_back(&entity);
+			normalMapEntities.insert(std::make_pair(entityModel, newBatch));
+		}
+		else {
+			batch->second.push_back(&entity);
+		}
+	}
+
 	void cleanUp() {
 		delete shader;
 		delete renderer;
 		delete terrainShader;
 		delete terrainRenderer;
+		delete normalMapRenderer;
 
 		delete time;
 		delete input;

@@ -32,10 +32,9 @@ const float gradient = 1.5;
 uniform vec4 plane;
 
 void main(void) {
+
 	vec4 worldPosition = transformationMatrix * vec4(position, 1.0);
-
 	gl_ClipDistance[0] = dot(worldPosition, plane);
-
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projectionMatrix * positionRelativeToCam;
 	pass_textureCoordinates = (textureCoords / numberOfRows) + offset; // offset
@@ -47,13 +46,8 @@ void main(void) {
 
 	surfaceNormal = (transformationMatrix * vec4(actualNormal, 0.0)).xyz;
 	for (int i = 0; i < 4; i++) {
-		//toLightVector[i] = lightPosition[i] - worldPosition.xyz;
+		toLightVector[i] = lightPosition[i] - worldPosition.xyz;
 	}
-
-    toLightVector[0] = lightPosition[0] - worldPosition.xyz;
-	toLightVector[1] = lightPosition[1] - worldPosition.xyz;
-	toLightVector[2] = lightPosition[2] - worldPosition.xyz;
-	toLightVector[3] = lightPosition[3] - worldPosition.xyz;
 
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 0.0)).xyz - worldPosition.xyz;
 
