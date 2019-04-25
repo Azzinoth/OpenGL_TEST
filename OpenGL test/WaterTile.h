@@ -2,7 +2,7 @@
 
 class WaterTile {
 
-	const float TILE_SIZE = 60;
+	const float TILE_SIZE = 500; // 160
 
 	float height;
 	float x, z;

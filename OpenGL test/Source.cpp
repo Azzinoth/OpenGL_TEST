@@ -9,6 +9,16 @@
 //#include "gl/GLU.h"
 //#include "GLES\GLES2\gl2.h"
 
+#include "thirdparty/imgui/imgui.h"
+#include "thirdparty/imgui/imgui.cpp"
+#include "thirdparty/imgui/imgui_demo.cpp"
+#include "thirdparty/imgui/imgui_draw.cpp"
+#include "thirdparty/imgui/imgui_widgets.cpp"
+#include "thirdparty/imgui/imgui_impl_opengl3.h"
+#include "thirdparty/imgui/imgui_impl_opengl3.cpp"
+#include "thirdparty/imgui/imgui_impl_win32.h"
+#include "thirdparty/imgui/imgui_impl_win32.cpp"
+
 #include "MasterRenderer.h"
 #include "Loader.h"
 #include "Player.h"
@@ -43,7 +53,7 @@ HDC g_hDC;
 #define WIN_W 1920
 #define WIN_H 1080
 
-#define RES_FOLDER "C:/Users/Кондрат/Downloads/OpenGL test/OpenGL test/resources/"
+#define RES_FOLDER "C:/Users/kandr/Downloads/OpenGL test_16.01.2018/OpenGL test/OpenGL test/resources/"
 
 inline int getTerrainIndexOutOfWorldXZ(int worldX, int WorldZ, std::vector<Terrain*>& terrains, int halfSizeOfWorld) {
 	float terX = worldX / terrains[0]->getSizeOfSide();
@@ -223,6 +233,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//{
   //          MessageBoxA(0, "failed to make complete framebuffer object", "OPENGL VERSION", 0);
   //      }
+
+		// Setup Dear ImGui context
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); //(void)io;
+									  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+									  // Build atlas
+		unsigned char* tex_pixels = NULL;
+		int tex_w, tex_h;
+		io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_w, &tex_h);
+
+		io.DisplaySize = ImVec2(WIN_W, WIN_H);
+		ImGui::StyleColorsDark();
+
+		ImGui_ImplWin32_Init(main_hwnd);
+		ImGui_ImplOpenGL3_Init("#version 130");
     }
 
     ShowWindow(main_hwnd, nCmdShow);
@@ -448,12 +474,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//texture1->setReflectivity(1);
 
 	TexturedModel* texturedPlane = new TexturedModel(plane, texture1);
-	Entity* planeEntity = new Entity(*loader, texturedPlane, glm::vec3(193.0f, 60.0f, -350.0f), glm::vec3(0.0f, 0.0f, 0.0f), 10.0f); // SIZE don't correct influense on light ?
+	Entity* planeEntity = new Entity(*loader, texturedPlane, glm::vec3(193.0f, 60.0f, -350.0f), glm::vec3(0.0f, 0.0f, 0.0f), 50.0f);
 
 	/*RawModel* leaves = loader->loadFromOBJ(RES_FOLDER "untitled.obj");
 	ModelTexture* leavesTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "DeadLeavesAtlas.png"));
 	TexturedModel* texturedLeaves = new TexturedModel(leaves, leavesTexture);
-	Entity* leavesEntity = new Entity(texturedLeaves, glm::vec3(0.0f, 10.5f, 0.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.1f);
+	Entity* leavesEntity = new Entity(*loader, texturedLeaves, glm::vec3(153.0f, 25.0f, -274.0f), glm::vec3(0.0f, 90.0f, 0.0f), 0.1f);
 
 	RawModel* bogMyrtle = loader->loadFromOBJ(RES_FOLDER "untitled2.obj");
 	ModelTexture* bogMyrtleTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "T_FieldScabious01_D.png"));
@@ -484,7 +510,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	TexturedModel* playerTexturedModel = new TexturedModel(playerModel, playerTexture);
 
-	player = new Player(*loader, playerTexturedModel, glm::vec3(153.0f, 5.0f, -274.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f);
+	player = new Player(*loader, playerTexturedModel, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1.5f); // glm::vec3(153.0f, 5.0f, -274.0f)
 	//camera = new ModelViewCamera(*player);
 	camera = new FreeCamera(main_hwnd, glm::vec3(153.0f, 25.0f, -274.0f));
 	//camera = new ModelViewCamera(*rockEntity);
@@ -498,6 +524,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	waterRenderer = new WaterRenderer(*loader, *waterShader, renderer->getProjectionMatrix(), *waterFrameBuffers, RES_FOLDER "waterDUDV.png", RES_FOLDER "normalMap.png");
 	std::vector<WaterTile*> waters;
 	waters.push_back(new WaterTile(153.0f, -274.0f, 20.0f));
+	//waters[0]->getTileSize()
 
 	// ************************ WATER ************************
 
@@ -539,10 +566,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ************************ CUTTREE ************************
 
+	// ************************ FALLENTREE ************************
+	RawModel* fallenTreeModel = loader->loadFromOBJ(RES_FOLDER "fallenTree/fallenTree.obj");
+	ModelTexture* fallenTreeTexture = new ModelTexture(loader->loadTexture(RES_FOLDER "fallenTree/T_Vegetation_Debris_002_D_R.png"));
+	fallenTreeTexture->setShineDamper(10);
+	fallenTreeTexture->setReflectivity(0);
+	fallenTreeTexture->setNormalMaptextureID(loader->loadTexture(RES_FOLDER "fallenTree/T_Vegetation_Debris_002_N.png"));
+
+	TexturedModel* fallenTreeTexturedModel = new TexturedModel(fallenTreeModel, fallenTreeTexture);
+
+	Entity* fallenTree = new Entity(*loader, fallenTreeTexturedModel, glm::vec3(190.0f, 50.0f, -300.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.1f);
+
+	// ************************ FALLENTREE ************************
+
 	RECT rc;
 	GetClientRect(main_hwnd, &rc);
 
 	MousePicker* mousePicker = new MousePicker(*camera, renderer->getProjectionMatrix(), rc.right - rc.left, rc.bottom - rc.top, *terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
+	
+	//temp 
+	float red_component_in_sky_color = 200.0f;
 
 	auto compactRenderer = [&](glm::vec4 clipPlane) {
 		//Sleep(5);
@@ -578,8 +621,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//renderer->processEntity(*rockEntity);
 		renderer->processNormalMapEntity(*rockEntity);
 
-		renderer->processEntity(*cutTree);
-		//renderer->processNormalMapEntity(*cutTree);
+		//renderer->processEntity(*cutTree);
+		renderer->processNormalMapEntity(*cutTree);
+
+		//renderer->processEntity(*fallenTree);
+		renderer->processNormalMapEntity(*fallenTree);
+		
 
 		renderer->processEntity(*lampEntity);
 		renderer->processEntity(*lampEntity1);
@@ -589,9 +636,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		renderer->processNormalMapEntity(*barrel);
 
-		renderer->render(lights, camera, glm::vec3(200.0f / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f), clipPlane);
+		renderer->render(lights, camera, glm::vec3(red_component_in_sky_color / 255.0f, 200.0f / 255.0f, 220.0f / 255.0f), clipPlane);
 	};
 
+	ImGuiIO& io = ImGui::GetIO();
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
@@ -602,6 +650,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         else
         {
 			Time::getInstance().startNewFrame();
+
+			io.DeltaTime = 1.0f / 60.0f;
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+
 			mousePicker->update();
 			camera->move(Time::getInstance().getTimePassedFromLastCallMS() / 1000.0f);
 			player->move(*terrains[getTerrainIndexOutOfWorldXZ(player->getPosition().x, player->getPosition().z, terrains, HALF_SIZE_OF_WORLD)]);
@@ -626,6 +680,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			waterRenderer->render(waters, *camera, lights[0]);
 			guiRenderer->render(guis);
 
+			//static float f = 0.0f;
+			ImGui::Text("Hello, world!");
+			ImGui::SliderFloat("red_component_in_sky_color", &red_component_in_sky_color, 0.0f, 255.0f);
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			ImGui::ShowDemoWindow(NULL);
+
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
             SwapBuffers(g_hDC);
         }
     }
@@ -634,6 +697,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	delete renderer;
 	delete waterRenderer;
 	delete waterFrameBuffers;
+
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 
     return (int)msg.wParam;
 }
@@ -652,11 +720,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+		return true;
+
     switch (message)
     {
 		case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
-
 
         EndPaint(hWnd, &ps);
         break;
@@ -704,25 +774,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_MOUSEMOVE:
 		{
-			if (hWnd == GetActiveWindow()) {
-				int mouseX = GET_X_LPARAM(lParam);
-				int mouseY = GET_Y_LPARAM(lParam);
-				//POINT mouse;
-				//GetCursorPos(&mouse);
+			//if (hWnd == GetActiveWindow()) {
+			//	int mouseX = GET_X_LPARAM(lParam);
+			//	int mouseY = GET_Y_LPARAM(lParam);
+			//	//POINT mouse;
+			//	//GetCursorPos(&mouse);
 
-				RECT rc, screen_wr;
-				GetClientRect(hWnd, &rc);
-				GetWindowRect(hWnd, &screen_wr);
+			//	RECT rc, screen_wr;
+			//	GetClientRect(hWnd, &rc);
+			//	GetWindowRect(hWnd, &screen_wr);
 
-				//int current_mouse_x = screen_wr.left + mouseX + 8;
-				//int current_mouse_y = screen_wr.top + mouseY + 31;
+			//	//int current_mouse_x = screen_wr.left + mouseX + 8;
+			//	//int current_mouse_y = screen_wr.top + mouseY + 31;
 
-				//camera->setMouseCoordinates(mouse.x, mouse.y);
+			//	//camera->setMouseCoordinates(mouse.x, mouse.y);
 
-				//camera->setMouseCoordinates(mouseX, mouseY);
-				//camera->setMouseCoordinates(current_mouse_x, current_mouse_y);
-				Input::getInstance().setMouseCoordinates(mouseX, mouseY);
-			}
+			//	//camera->setMouseCoordinates(mouseX, mouseY);
+			//	//camera->setMouseCoordinates(current_mouse_x, current_mouse_y);
+			//	Input::getInstance().setMouseCoordinates(mouseX, mouseY);
+			//}
 		}
 		break;
 

@@ -74,6 +74,21 @@ public:
 		shader->start();
 		shader->loadViewMatrix(camera);
 		shader->loadFogColor(fogColor);
+
+		if (time >= 0 && time < 5000) {
+			shader->loadFogColor(glm::vec3(0.1f, 0.1f, 0.1f));
+		}
+		else if (time >= 5000.0f && time < 8000.0f) {
+			shader->loadFogColor(glm::vec3(0.1f, 0.1f, 0.1f));
+		}
+		else if (time >= 8000 && time < 21000) {
+			
+		}
+		else {
+			shader->loadFogColor(glm::vec3(0.1f, 0.1f, 0.1f));
+		}
+
+
 		GL_ERROR(glBindVertexArray(cube->getVaoID()));
 		GL_ERROR(glEnableVertexAttribArray(0));
 		bindTextures();
